@@ -65,14 +65,15 @@ public abstract class AbstractByteBuf extends ByteBuf {
         }
     }
 
+    // 用于检测对象是否泄漏
     static final ResourceLeakDetector<ByteBuf> leakDetector =
             ResourceLeakDetectorFactory.instance().newResourceLeakDetector(ByteBuf.class);
 
-    int readerIndex;
-    int writerIndex;
-    private int markedReaderIndex;
-    private int markedWriterIndex;
-    private int maxCapacity;
+    int readerIndex;// 读索引
+    int writerIndex;// 写索引
+    private int markedReaderIndex;// mark
+    private int markedWriterIndex;// mark
+    private int maxCapacity;// 最大容量
 
     protected AbstractByteBuf(int maxCapacity) {
         checkPositiveOrZero(maxCapacity, "maxCapacity");
@@ -109,6 +110,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     private static void checkIndexBounds(final int readerIndex, final int writerIndex, final int capacity) {
         if (readerIndex < 0 || readerIndex > writerIndex || writerIndex > capacity) {
+            // 如果它小于0或者大于写索引，则抛出IndexOutOfBoundsException异常
             throw new IndexOutOfBoundsException(String.format(
                     "readerIndex: %d, writerIndex: %d (expected: 0 <= readerIndex <= writerIndex <= capacity(%d))",
                     readerIndex, writerIndex, capacity));
@@ -214,17 +216,23 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf discardReadBytes() {
+        // 读索引为0说明没有可重用的缓冲区，直接返回
         if (readerIndex == 0) {
             ensureAccessible();
             return this;
         }
 
+        // 读写索引不相等，说明：
+        // 1、有已经读取过的被丢弃的缓冲区。
+        // 2、有尚未读取的可读缓冲区。
         if (readerIndex != writerIndex) {
             setBytes(0, this, readerIndex, writerIndex - readerIndex);
             writerIndex -= readerIndex;
             adjustMarkers(readerIndex);
-            readerIndex = 0;
+            readerIndex = 0;// 重置读索引
         } else {
+            // 如果readerIndex等于writerIndex，则说明没有可读的字节数组，
+            // 那就不需要进行内存复制，直接调整mark，将读写索引设置为0即可。
             ensureAccessible();
             adjustMarkers(readerIndex);
             writerIndex = readerIndex = 0;
@@ -256,15 +264,22 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     protected final void adjustMarkers(int decrement) {
         int markedReaderIndex = this.markedReaderIndex;
+        // 如果小于需要减少的值，则将markedReaderIndex设置为0.
         if (markedReaderIndex <= decrement) {
             this.markedReaderIndex = 0;
             int markedWriterIndex = this.markedWriterIndex;
+            // 无论markedReaderIndex还是markedWriterIndex,它的取值
+            // 都不能小于0.如果markedWriterIndex也小于需要减少的值，
+            // 则markedWriterIndex置为0，否则，markedWriterIndex减去
+            // decrement之后的值就是新的markedWriterIndex。
             if (markedWriterIndex <= decrement) {
                 this.markedWriterIndex = 0;
             } else {
                 this.markedWriterIndex = markedWriterIndex - decrement;
             }
         } else {
+            // 如果需要减小的值小于markedReaderIndex，则它也一定小于markedWriterIndex，
+            // markedRederIndex和markedWriterIndex的新值就是减去decrement之后的新值。
             this.markedReaderIndex = markedReaderIndex - decrement;
             markedWriterIndex -= decrement;
         }
@@ -279,6 +294,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf ensureWritable(int minWritableBytes) {
+        // 写入的字节数长度小于0，则抛出IllegalArgumentException异常
         ensureWritable0(checkPositiveOrZero(minWritableBytes, "minWritableBytes"));
         return this;
     }
@@ -286,6 +302,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
     final void ensureWritable0(int minWritableBytes) {
         final int writerIndex = writerIndex();
         final int targetCapacity = writerIndex + minWritableBytes;
+        // 如果写入的字节数组长度小于当前ByteBuf可写的字节数，说明可以写入成功，直接返回
         if (targetCapacity <= capacity()) {
             ensureAccessible();
             return;
@@ -297,8 +314,10 @@ public abstract class AbstractByteBuf extends ByteBuf {
                     writerIndex, minWritableBytes, maxCapacity, this));
         }
 
+        // 动态扩展最大可写字节数
         // Normalize the target capacity to the power of 2.
         final int fastWritable = maxFastWritableBytes();
+        // 采用先倍增后步进
         int newCapacity = fastWritable >= minWritableBytes ? writerIndex + fastWritable
                 : alloc().calculateNewCapacity(targetCapacity, maxCapacity);
 
@@ -926,9 +945,12 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf readBytes(ByteBuf dst, int dstIndex, int length) {
+        // 对缓冲区的可用空间进行校验
         checkReadableBytes(length);
+        // 从当前的读索引开始，复制length个字节到目标byte数组中，
+        // 该方法由子类来实现。
         getBytes(readerIndex, dst, dstIndex, length);
-        readerIndex += length;
+        readerIndex += length;// 对读索引递增
         return this;
     }
 
@@ -1460,6 +1482,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
      * than the specified value.
      */
     protected final void checkReadableBytes(int minimumReadableBytes) {
+        // 如果读取的长度小于0，则抛出IllegalArgumentException异常
         checkReadableBytes0(checkPositiveOrZero(minimumReadableBytes, "minimumReadableBytes"));
     }
 

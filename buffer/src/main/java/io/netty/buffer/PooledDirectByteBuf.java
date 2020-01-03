@@ -37,7 +37,7 @@ final class PooledDirectByteBuf extends PooledByteBuf<ByteBuffer> {
 
     static PooledDirectByteBuf newInstance(int maxCapacity) {
         PooledDirectByteBuf buf = RECYCLER.get();
-        buf.reuse(maxCapacity);
+        buf.reuse(maxCapacity);// 设置最大容量
         return buf;
     }
 
@@ -281,7 +281,7 @@ final class PooledDirectByteBuf extends PooledByteBuf<ByteBuffer> {
 
     @Override
     public ByteBuf copy(int index, int length) {
-        checkIndex(index, length);
+        checkIndex(index, length);// 对索引和长度进行合法性校验
         ByteBuf copy = alloc().directBuffer(length, maxCapacity());
         return copy.writeBytes(this, index, length);
     }

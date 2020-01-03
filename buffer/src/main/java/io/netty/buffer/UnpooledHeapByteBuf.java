@@ -35,10 +35,17 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * {@link UnpooledByteBufAllocator#heapBuffer(int, int)}, {@link Unpooled#buffer(int)} and
  * {@link Unpooled#wrappedBuffer(byte[])} instead of calling the constructor explicitly.
  */
+/**
+ * 该类基于堆内存进行内存分配的字节缓冲区，它没有基于对象池技术实现，这就意味着每次I/O的读写
+ * 都会创建一个新的UnpooledHeapByteBuf，频繁进行大块内存的分配和回收对性能都会造成一定影响，
+ * 但是相比堆外内存的申请和释放，它的成本还是会低一些。
+ */
 public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
 
+    // 用于UnpooledHeapByteBuf的内存分配
     private final ByteBufAllocator alloc;
-    byte[] array;
+    byte[] array;// 作为缓冲区
+    // 用于实现Netty ByteBuf到JDk NIO ByteBuffer的转换
     private ByteBuffer tmpNioBuf;
 
     /**
@@ -105,6 +112,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
+    // 判断是否是基于堆内存实现
     public boolean isDirect() {
         return false;
     }
@@ -138,6 +146,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
+    // 判断是否基于字节数组实现
     public boolean hasArray() {
         return true;
     }
