@@ -2316,6 +2316,10 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @see #nioBuffers()
      * @see #nioBuffers(int, int)
      */
+    /**
+     * 将当前ByteBuf可读的缓冲区转换成ByteBuffer，两者共享一个缓冲区内容引用，对ByteBuffer的读写操作并不会修改原ByteBuf
+     * 的读写索引，返回后的ByteBuffer无法感知原ByteBuf的动态扩展操作。
+     */
     public abstract ByteBuffer nioBuffer();
 
     /**
