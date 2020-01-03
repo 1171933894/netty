@@ -472,6 +472,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * {@code readerIndex} by calling {@link #resetReaderIndex()}.
      * The initial value of the marked {@code readerIndex} is {@code 0}.
      */
+    // 将当前的readerIndex备份到markedReaderIndex中
     public abstract ByteBuf markReaderIndex();
 
     /**
@@ -482,6 +483,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *         if the current {@code writerIndex} is less than the marked
      *         {@code readerIndex}
      */
+    // 将当前的readerIndex设置为markedReaderIndex
     public abstract ByteBuf resetReaderIndex();
 
     /**
@@ -490,6 +492,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * {@code writerIndex} by calling {@link #resetWriterIndex()}.
      * The initial value of the marked {@code writerIndex} is {@code 0}.
      */
+    // 将当前的writerIndex备份到markedWriterIndex。
     public abstract ByteBuf markWriterIndex();
 
     /**
@@ -500,6 +503,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *         if the current {@code readerIndex} is greater than the marked
      *         {@code writerIndex}
      */
+    // 将当前的writerIndex设置为markedWriterIndex。
     public abstract ByteBuf resetWriterIndex();
 
     /**
@@ -1357,6 +1361,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 1}
      */
+    // 从readerIndex开始获取boolean值，readerIndex增加1
     public abstract boolean readBoolean();
 
     /**
@@ -1366,6 +1371,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 1}
      */
+    // 从readerIndex开始获取字节值，readerIndex增加1
     public abstract byte  readByte();
 
     /**
@@ -1375,6 +1381,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 1}
      */
+    // 从readerIndex开始获取无符号字节值，readerIndex增加1
     public abstract short readUnsignedByte();
 
     /**
@@ -1384,6 +1391,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 2}
      */
+    // 从readerIndex开始获取短整型值，readerIndex增加2
     public abstract short readShort();
 
     /**
@@ -1403,6 +1411,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 2}
      */
+    // 从readerIndex开始获取无符号短整型值，readerIndex增加2
     public abstract int   readUnsignedShort();
 
     /**
@@ -1575,6 +1584,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code length} is greater than {@code this.readableBytes}
      */
+    // 将当前ByteBuf中的数据读取到新创建的ByteBuf中，读取的长度为length。操作完成之后，
+    // 返回的ByteBuf的readerIndex为0，writerIndex为length。
     public abstract ByteBuf readBytes(int length);
 
     /**
@@ -1592,6 +1603,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code length} is greater than {@code this.readableBytes}
      */
+    // 返回当前ByteBuf新创建的子区域，子区域与原ByteBuf共享缓冲区，但是独立维护自己的readerIndex
+    // 和writerIndex.新创建的子区域readerIndex为0，writerIndex为length。
     public abstract ByteBuf readSlice(int length);
 
     /**
@@ -1626,6 +1639,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *         if {@code dst.writableBytes} is greater than
      *            {@code this.readableBytes}
      */
+    // 将当前ByteBuf的数据读取到目标ByteBuf中，直到目标ByteBuf没有剩余的空间可写。
+    // 操作完成之后，当前ByteBuf的readerIndex += 读取的字节数。
     public abstract ByteBuf readBytes(ByteBuf dst);
 
     /**
@@ -1641,6 +1656,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *         if {@code length} is greater than {@code this.readableBytes} or
      *         if {@code length} is greater than {@code dst.writableBytes}
      */
+    // 将当前ByteBuf的数据读取到目标ByteBuf中，读取的字节数长度为length。
+    // 操作完成之后，当前ByteBuf的readerIndex += length。
     public abstract ByteBuf readBytes(ByteBuf dst, int length);
 
     /**
@@ -1667,6 +1684,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if {@code dst.length} is greater than {@code this.readableBytes}
      */
+    // 将当前ByteBuf的数据读取到目标byte数组中，读取的字节数长度为dst.length。
+    // 操作完成之后，当前ByteBuf的readerIndex += dst.length。
     public abstract ByteBuf readBytes(byte[] dst);
 
     /**
@@ -1768,6 +1787,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * If {@code this.writableBytes} is less than {@code 1}, {@link #ensureWritable(int)}
      * will be called in an attempt to expand capacity to accommodate.
      */
+    // 将参数value写入到当前的ByteBuf中，操作成功之后writerIndex += 1。
     public abstract ByteBuf writeBoolean(boolean value);
 
     /**
@@ -2075,6 +2095,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @return the absolute index of the first occurrence if found.
      *         {@code -1} otherwise.
      */
+    // 从当前ByteBuf中定位出首次出现value的位置，其实索引为fromIndex，终点是toIndex，
+    // 如果没有查找到则返回-1，否则返回第一条满足搜索条件的位置的索引。
     public abstract int indexOf(int fromIndex, int toIndex, byte value);
 
     /**
@@ -2088,6 +2110,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @return the number of bytes between the current {@code readerIndex}
      *         and the first occurrence if found. {@code -1} otherwise.
      */
+    // 从当前ByteBuf中定位出首次出现value的位置，其实索引为readerIndex，终点是readerIndex+length,
+    // 如果美欧查找到则返回-1。
     public abstract int bytesBefore(byte value);
 
     /**
@@ -2128,6 +2152,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
+    // 遍历当前ByteBuf的可读字节数组，与ByteBufProcessor设置的查找条件进行对比，如果满足条件，则返回位置索引，否则返回-1。
     public abstract int forEachByte(ByteProcessor processor);
 
     /**
@@ -2238,6 +2263,11 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @return A buffer whose readable content is equivalent to the buffer returned by {@link #slice()}.
      * However this buffer will share the capacity of the underlying buffer, and therefore allows access to all of the
      * underlying content if necessary.
+     */
+    /**
+     * 返回当前ByteBuf的复制对象，复制后返回的ByteBuf与操作的ByteBuf共享缓冲区内容，
+     * 但是维护自己独立的读写索引。当修改复制后的ByteBuf内容后，之前原ByteBuf的内容也
+     * 随之改变，双方持有的是同一个内容指针引用。
      */
     public abstract ByteBuf duplicate();
 
