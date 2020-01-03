@@ -187,9 +187,19 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      */
     ByteBufAllocator alloc();
 
+    /**
+     * 从当前的Channel中读取数据到第一个inbound缓冲区中，如果数据被成功读取，
+     * 触发ChannelHandler.channelRead(ChannelHandlerContext, Object)
+     * 事件，读取操作API调用完成之后，紧接着会触发ChannelHandler.channelReadComplete(ChannelHanderContext)
+     * 事件，这样业务的ChannelHandler可以决定是否需要继续读取数据。如果已经有读操作请求被挂起，则后续的读操作会被
+     * 忽略。
+     */
     @Override
     Channel read();
 
+    /**
+     * 将之前写入到发送环形数组中的消息全部写入到目标Channel中，发送给通信对方。
+     */
     @Override
     Channel flush();
 
