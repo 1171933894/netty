@@ -50,7 +50,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(AbstractNioChannel.class);
 
+    // 由于NIO Channel、NioSocketChannel和NioServerSocketChannel需要公用，
+    // 所以定义了一个SocketChannel和ServerSocketChannel的公共父类SelectableChannel，
+    // 用于设置SelectableChannel参数和进行I/O操作。
     private final SelectableChannel ch;
+    // 代表JDK SelectionKey的OP_READ
     protected final int readInterestOp;
     volatile SelectionKey selectionKey;
     boolean readPending;
@@ -65,8 +69,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * The future of the current connection attempt.  If not null, subsequent
      * connection attempts will fail.
      */
+    // 连接操作结果
     private ChannelPromise connectPromise;
+    // 连接超时定时器
     private ScheduledFuture<?> connectTimeoutFuture;
+    // 请求的通信地址信息
     private SocketAddress requestedRemoteAddress;
 
     /**
@@ -374,9 +381,16 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
     @Override
     protected void doRegister() throws Exception {
+        // 用来标识注册操作是否成功
         boolean selected = false;
         for (;;) {
             try {
+                // 调用SelectableChannel的register方法，将当前的Channel注册到EventLoop的多路复用器上
+                // 注册Channel的时候需要指定监听的网络操作位来表示Channel对哪几类网络事件感兴趣，注册的是0，
+                // 说明对任何事件都不感兴趣，仅仅完成注册操作。注册的时候可以指定附件，后续Channel接收到网络事件
+                // 通知时可以从SelectionKey中重新获取之前的附件进行处理，此处将AbstractNioChannel的实现子类自身
+                // 当作附件注册。如果注册Channel成功，则返回selectionKey，通过selectionKey可以从多路复用器中
+                // 获取Channel对象。
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

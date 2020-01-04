@@ -44,16 +44,16 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannel.class);
 
-    private final Channel parent;
-    private final ChannelId id;
-    private final Unsafe unsafe;
-    private final DefaultChannelPipeline pipeline;
+    private final Channel parent;// 父类Channel
+    private final ChannelId id;// 采用默认方式生成的全局唯一ID
+    private final Unsafe unsafe;// Unsafe实例
+    private final DefaultChannelPipeline pipeline;// 当前Channel对应的DefaultChannelPipeline
     private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(this, false);
     private final CloseFuture closeFuture = new CloseFuture(this);
 
     private volatile SocketAddress localAddress;
     private volatile SocketAddress remoteAddress;
-    private volatile EventLoop eventLoop;
+    private volatile EventLoop eventLoop;// 当前Channel注册的EventLoop
     private volatile boolean registered;
     private boolean closeInitiated;
     private Throwable initialCloseCause;
@@ -219,6 +219,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     @Override
     public ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress) {
+        // 直接调用DefaultChannelPipeline的相关方法，由对应的ChannelHandler进行具体逻辑处理
         return pipeline.connect(remoteAddress, localAddress);
     }
 

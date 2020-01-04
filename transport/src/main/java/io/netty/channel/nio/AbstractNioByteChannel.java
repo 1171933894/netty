@@ -46,6 +46,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
             StringUtil.simpleClassName(FileRegion.class) + ')';
 
+    // 负责继续写半包消息
     private final Runnable flushTask = new Runnable() {
         @Override
         public void run() {
@@ -251,6 +252,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         int writeSpinCount = config().getWriteSpinCount();
         do {
+            // 从发送消息环形数组ChannelOutboundBuffer弹出一条消息，
+            // 判断该消息是否为空，如果为空，说明消息发送数组中所有待
+            // 发送的消息都已经发送完成，清理半包标识，然后退出循环。
             Object msg = in.current();
             if (msg == null) {
                 // Wrote all messages.

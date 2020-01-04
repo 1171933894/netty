@@ -92,6 +92,8 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * @return the parent channel.
      *         {@code null} if this channel does not have a parent channel.
      */
+    // 对于服务端Channel而言，它的父Channel为空；对于客户端Channel，它的父Channel就是
+    // 创建它的ServerSocketChannel。
     Channel parent();
 
     /**
