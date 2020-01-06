@@ -307,19 +307,24 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     @Override
     protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         if (localAddress != null) {
+            // 绑定本地地址
             doBind0(localAddress);
         }
 
         boolean success = false;
         try {
+            // 发起TCP连接
             boolean connected = SocketUtils.connect(javaChannel(), remoteAddress);
             if (!connected) {
+                // 暂时没有连接上，服务端没有返回ACK应答，连接结果不确定，返回false
                 selectionKey().interestOps(SelectionKey.OP_CONNECT);
             }
             success = true;
-            return connected;
+            return connected;// 成功返回true
         } finally {
             if (!success) {
+                // 如果抛出了IO异常，说明客户端的TCP握手请求直接被REST或者被拒绝
+                // 此时需要关闭客户端连接
                 doClose();
             }
         }

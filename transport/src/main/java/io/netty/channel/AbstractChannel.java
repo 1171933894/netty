@@ -465,6 +465,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             AbstractChannel.this.eventLoop = eventLoop;
 
+            // 如果是同一个线程则不存在多线程并发操作问题，直接调用register()进行注册；
+            // 如果是由用户线程或者其他线程发起的注册操作，则将注册操作封装为Runnable，
+            // 放到NioEventLoop任务队列中执行。如果直接执行register0方法，会存在多
+            // 线程并发操作Channel的问题。
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {
@@ -490,6 +494,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             try {
                 // check if the channel is still open as it could be closed in the mean time when the register
                 // call was outside of the eventLoop
+                // 首先调用ensureOpen方法判断当前Channel是否打开，如果没有打开则无法注册，直接返回
                 if (!promise.setUncancellable() || !ensureOpen(promise)) {
                     return;
                 }
@@ -508,7 +513,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // multiple channel actives if the channel is deregistered and re-registered.
                 if (isActive()) {
                     if (firstRegistration) {
-                        pipeline.fireChannelActive();
+                        pipeline.fireChannelActive();// 如果已经被激活，调用ChannelPipeline的fireChannelActive方法。
                     } else if (config().isAutoRead()) {
                         // This channel was registered before and autoRead() is set. This means we need to begin read
                         // again so that we process inbound data.
@@ -525,6 +530,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
         }
 
+        // bind方法主要用于绑定指定的端口，对于服务端，用于绑定监听端口，可以设置backlog参数
+        // 对于客户端，主要用于指定客户端Channel的本地绑定Socket地址。
         @Override
         public final void bind(final SocketAddress localAddress, final ChannelPromise promise) {
             assertEventLoop();
@@ -567,6 +574,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             safeSetSuccess(promise);
         }
 
+        // disconnect用于客户端或者服务端主动关闭连接
         @Override
         public final void disconnect(final ChannelPromise promise) {
             assertEventLoop();

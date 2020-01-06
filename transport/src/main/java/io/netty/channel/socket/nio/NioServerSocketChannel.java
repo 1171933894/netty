@@ -66,6 +66,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         }
     }
 
+    // 用于配置ServerSocketChannel的TCP参数
     private final ServerSocketChannelConfig config;
 
     /**
@@ -142,8 +143,15 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         javaChannel().close();
     }
 
+    /**
+     * 读取操作就是接收客户端的连接，创建NioSocketChannel对象
+     */
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
+        // ServerSocketChannel的accept接收新的客户端连接，如果
+        // SocketChannel不为空，则利用当前的NioServerSocketChannel
+        // EventLoop和ScketChannel创建新的NioSocketChannel，
+        // 最后返回1， 表示服务端消息读取成功。
         SocketChannel ch = SocketUtils.accept(javaChannel());
 
         try {
@@ -163,6 +171,11 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         return 0;
     }
+
+    /**
+     * 以下是与服务端Channel无关的接口定义，由于这些方法是客户端Channel相关的，
+     * 因此，对于服务端Channel无须实现。
+     */
 
     // Unnecessary stuff
     @Override
