@@ -213,6 +213,13 @@ import java.util.NoSuchElementException;
  * For example, you can insert an encryption handler when sensitive information is about to be exchanged, and remove it
  * after the exchange.
  */
+
+/**
+ * ChannelPipeline是线程安全的，这意味着N个业务线程可以并发地操作ChannelPipeline而不存在多线程并发问题。
+ * ChannelHandler却不是线程安全的，需要自己保证ChannelHandlerd的线程安全。
+ *
+ * Netty的ChannelPipeline支持运行态动态的添加或者删除ChannelHandler。
+ */
 public interface ChannelPipeline
         extends ChannelInboundInvoker, ChannelOutboundInvoker, Iterable<Entry<String, ChannelHandler>> {
 

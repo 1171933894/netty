@@ -242,7 +242,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             EventExecutorGroup group, String baseName, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         final AbstractChannelHandlerContext ctx;
+        // 为了保证ChannelPipeline的线程安全性，需要通过线程安全容器或者锁来保证并发访问的安全，此处Netty直接使用
+        // synchronized关键字，保证同步块内的所有操作的原子性。
         synchronized (this) {
+            // 对新增的ChannelHandler名进行重复性校验，
+            // 如果已经存在同名的ChannelHandler存在，
+            // 则抛出异常。
             checkMultiplicity(handler);
             name = filterName(name, handler);
             ctx = getContextOrDie(baseName);
