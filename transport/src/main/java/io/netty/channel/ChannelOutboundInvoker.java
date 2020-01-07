@@ -110,6 +110,7 @@ public interface ChannelOutboundInvoker {
      * called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    // 绑定本地地址事件
     ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise);
 
     /**
@@ -128,6 +129,7 @@ public interface ChannelOutboundInvoker {
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    // 连接服务端事件
     ChannelFuture connect(SocketAddress remoteAddress, ChannelPromise promise);
 
     /**
@@ -155,6 +157,7 @@ public interface ChannelOutboundInvoker {
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    // 断开连接事件
     ChannelFuture disconnect(ChannelPromise promise);
 
     /**
@@ -170,6 +173,7 @@ public interface ChannelOutboundInvoker {
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    // 关闭当前Channel事件
     ChannelFuture close(ChannelPromise promise);
 
     /**
@@ -198,6 +202,7 @@ public interface ChannelOutboundInvoker {
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    // 读事件
     ChannelOutboundInvoker read();
 
     /**
@@ -212,11 +217,13 @@ public interface ChannelOutboundInvoker {
      * This method will not request to actual flush, so be sure to call {@link #flush()}
      * once you want to request to flush all pending data to the actual transport.
      */
+    // 发送事件
     ChannelFuture write(Object msg, ChannelPromise promise);
 
     /**
      * Request to flush all pending messages via this ChannelOutboundInvoker.
      */
+    // 刷新事件
     ChannelOutboundInvoker flush();
 
     /**

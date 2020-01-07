@@ -122,6 +122,14 @@ import java.nio.channels.Channels;
  * what fundamental differences they have, how they flow in a  pipeline,  and how to handle
  * the operation in your application.
  */
+
+/**
+ * Netty中的事件分为inbound事件和outbound事件。
+ * inbound事件通常由I/O线程触发，例如TCP链路建立事件、
+ * 链路关闭事件、读事件、异常通知事件等。
+ * outbound事件通常是由用户主动发起的网络I/O操作，
+ * 例如用户发起的连接操作、绑定操作、消息发送等操作。
+ */
 public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvoker, ChannelOutboundInvoker {
 
     /**
@@ -153,30 +161,38 @@ public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvok
      */
     boolean isRemoved();
 
+    // channel注册事件
     @Override
     ChannelHandlerContext fireChannelRegistered();
 
     @Override
     ChannelHandlerContext fireChannelUnregistered();
 
+    // TCP链路建立成功，Channel激活事件
     @Override
     ChannelHandlerContext fireChannelActive();
 
+    // TCP连接关闭，链路不可用通知事件
     @Override
     ChannelHandlerContext fireChannelInactive();
 
+    // 异常事件通知
     @Override
     ChannelHandlerContext fireExceptionCaught(Throwable cause);
 
+    // 用户自定义事件
     @Override
     ChannelHandlerContext fireUserEventTriggered(Object evt);
 
+    // 读事件
     @Override
     ChannelHandlerContext fireChannelRead(Object msg);
 
+    // 读操作完成通知事件
     @Override
     ChannelHandlerContext fireChannelReadComplete();
 
+    // Channel的可写状态变化通知事件
     @Override
     ChannelHandlerContext fireChannelWritabilityChanged();
 
