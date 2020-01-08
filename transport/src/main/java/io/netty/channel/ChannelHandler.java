@@ -180,6 +180,11 @@ import java.lang.annotation.Target;
  * ChannelHandler类似于Servlet的Filter过滤器，负责对I/O事件或者I/O操作
  * 进行拦截和处理，它可以选择性地拦截和处理自己感兴趣的事件，也可以透传和终止
  * 事件的传递。
+ *
+ * ChannelHandler主要分类有：
+ * 1）系统ChannelHandler，用于I/O操作和事件进行预处理，对于用户不可见，这类ChannelHandler主要包括HeadHandler和TailHandler。
+ * 2）编解码ChannelHandler，包括ByteToMessageCodec、MessageToMessageDecoder等，这些编解码类本身又包含多种子类。
+ * 3）其他系统功能性ChannelHandler，包括流量整型Handler、读写超时Handler、日志Handler等。
  */
 public interface ChannelHandler {
 
