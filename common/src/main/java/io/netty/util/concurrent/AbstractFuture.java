@@ -29,8 +29,12 @@ public abstract class AbstractFuture<V> implements Future<V> {
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
+        // 调用awwait()方法进行无限期阻塞，当I/O操作完成后会被nitify()。
         await();
 
+        // 程序被唤醒后继续执行，检查I/O操作是否发生了一场，如果没有异常，
+        // 则通过getNow()方法获取结果并返回。否则，将异常堆栈进行包装，
+        // 抛出ExecutionExcepton。
         Throwable cause = cause();
         if (cause == null) {
             return getNow();
@@ -44,6 +48,7 @@ public abstract class AbstractFuture<V> implements Future<V> {
     @Override
     public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         if (await(timeout, unit)) {
+            // 如果没有超时，则依次判断是否发生了I/O异常等情况
             Throwable cause = cause();
             if (cause == null) {
                 return getNow();
@@ -53,6 +58,7 @@ public abstract class AbstractFuture<V> implements Future<V> {
             }
             throw new ExecutionException(cause);
         }
+        // 如果超时则返回TimeoutException
         throw new TimeoutException();
     }
 }
