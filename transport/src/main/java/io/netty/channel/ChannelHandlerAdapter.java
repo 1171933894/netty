@@ -24,6 +24,14 @@ import java.util.Map;
 /**
  * Skeleton implementation of a {@link ChannelHandler}.
  */
+
+/**
+ * 对于大多数的ChannelHandler会选择性地拦截和处理某个或某些事件，其他的事件
+ * 会忽略，由下一个ChannelHandler进行拦截和处理。为了解决这个问题，Netty提供了
+ * ChannelHandlerAdapter基类，它的所有接口实现都是事件透传，如果用户ChannelHandler
+ * 关心某个事件，只需要覆盖ChannelHandlerAdapter对应的方法即可，对于不关心的，
+ * 可以直接继承使用父类的方法，这样子类的diamante就会非常简洁和清晰。
+ */
 public abstract class ChannelHandlerAdapter implements ChannelHandler {
 
     // Not using volatile because it's used only for a sanity check.

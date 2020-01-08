@@ -175,6 +175,12 @@ import java.lang.annotation.Target;
  * what fundamental differences they have, how they flow in a  pipeline,  and how to handle
  * the operation in your application.
  */
+
+/**
+ * ChannelHandler类似于Servlet的Filter过滤器，负责对I/O事件或者I/O操作
+ * 进行拦截和处理，它可以选择性地拦截和处理自己感兴趣的事件，也可以透传和终止
+ * 事件的传递。
+ */
 public interface ChannelHandler {
 
     /**
