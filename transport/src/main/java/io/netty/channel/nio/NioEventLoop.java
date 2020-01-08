@@ -54,6 +54,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@link Selector} and so does the multi-plexing of these in the event loop.
  *
  */
+
+/**
+ * NioEventLoop并不是一个纯粹的I/O线程，它除了负责I/O的读写之外，还
+ * 兼顾处理以下两类任务。
+ * 1）系统task。通过execute(Runnable task)方法
+ * 2）定时任务。通过schedule(Runnable command, long delay, TimeUnit unit)方法实现。
+ */
 public final class NioEventLoop extends SingleThreadEventLoop {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioEventLoop.class);
