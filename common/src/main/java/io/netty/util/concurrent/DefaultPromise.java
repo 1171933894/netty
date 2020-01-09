@@ -606,11 +606,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     private boolean setFailure0(Throwable cause) {
         return setValue0(new CauseHolder(checkNotNull(cause, "cause")));
-    }
+}
 
     private boolean setValue0(Object objResult) {
         if (RESULT_UPDATER.compareAndSet(this, null, objResult) ||
-            RESULT_UPDATER.compareAndSet(this, UNCANCELLABLE, objResult)) {
+                RESULT_UPDATER.compareAndSet(this, UNCANCELLABLE, objResult)) {
             if (checkNotifyWaiters()) {
                 notifyListeners();
             }
