@@ -29,6 +29,7 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param promise       the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception    thrown if an error occurs
      */
+    // 当请求将Channel绑定到本地地址时被调用
     void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception;
 
     /**
@@ -40,6 +41,7 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
+    // 当请求将Channel连接到远程节点时被调用
     void connect(
             ChannelHandlerContext ctx, SocketAddress remoteAddress,
             SocketAddress localAddress, ChannelPromise promise) throws Exception;
@@ -51,6 +53,7 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
+    // 当请求将Channel从远程节点断开时被调用
     void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception;
 
     /**
@@ -60,6 +63,7 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
+    // 当请求关闭Channel被调用
     void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception;
 
     /**
@@ -69,11 +73,13 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
+    // 当请求将Channel从他的EventLoop注销时被调用
     void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception;
 
     /**
      * Intercepts {@link ChannelHandlerContext#read()}.
      */
+    // 当请求将Channel读取更多的数据时被调用
     void read(ChannelHandlerContext ctx) throws Exception;
 
     /**
@@ -86,6 +92,7 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
+    // 当请求通过Channel将数据写到远程节点时被调用
     void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception;
 
     /**
@@ -95,5 +102,6 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * @param ctx               the {@link ChannelHandlerContext} for which the flush operation is made
      * @throws Exception        thrown if an error occurs
      */
+    // 当请求通过Channel将入队数据冲刷到远程节点时被调用
     void flush(ChannelHandlerContext ctx) throws Exception;
 }
