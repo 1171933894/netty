@@ -601,18 +601,22 @@ public interface ChannelPipeline
      */
     Map<String, ChannelHandler> toMap();
 
+    // 调用ChannelPipeline中下一个ChannelInBoundHandler的channelRegistered方法
     @Override
     ChannelPipeline fireChannelRegistered();
 
+    // 调用ChannelPipeline中下一个ChannelInBoundHandler的channelUnregistered方法
     @Override
     ChannelPipeline fireChannelUnregistered();
 
     @Override
     ChannelPipeline fireChannelActive();
 
+    // 调用ChannelPipeline中下一个ChannelInBoundHandler的channelInactive方法
     @Override
     ChannelPipeline fireChannelInactive();
 
+    // 调用ChannelPipeline中下一个ChannelInBoundHandler的exceptionCaught方法
     @Override
     ChannelPipeline fireExceptionCaught(Throwable cause);
 
