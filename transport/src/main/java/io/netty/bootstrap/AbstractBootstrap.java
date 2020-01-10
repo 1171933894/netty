@@ -49,6 +49,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>When not used in a {@link ServerBootstrap} context, the {@link #bind()} methods are useful for connectionless
  * transports such as datagram (UDP).</p>
  */
+
+/**
+ * 有时可能会需要多个具有类似配置或者完全相同配置的Channel。为了支持这种模式而又不需要为每个
+ * Channel都创建并配置一个新的引导类实例，AbstractBootstrap被标记为Cloneable。在一个已经
+ * 配置完成的引导类实例上调用clone方法将返回另一个可以立即使用的引导类实例。
+ */
 public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
     @SuppressWarnings("unchecked")
     static final Map.Entry<ChannelOption<?>, Object>[] EMPTY_OPTION_ARRAY = new Map.Entry[0];
@@ -80,6 +86,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * The {@link EventLoopGroup} which is used to handle all the events for the to-be-created
      * {@link Channel}
      */
+    // 设置用于处理Channel所有事件的EventLoopGroup
     public B group(EventLoopGroup group) {
         ObjectUtil.checkNotNull(group, "group");
         if (this.group != null) {
@@ -99,6 +106,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * You either use this or {@link #channelFactory(io.netty.channel.ChannelFactory)} if your
      * {@link Channel} implementation has no no-args constructor.
      */
+    // channel方法指定了Channel的实现类。如果该实现类没提供默认的构造函数，可以调用channelFactory方法
+    // 来指定一个工厂类，它将会被bind方法调用
     public B channel(Class<? extends C> channelClass) {
         return channelFactory(new ReflectiveChannelFactory<C>(
                 ObjectUtil.checkNotNull(channelClass, "channelClass")
@@ -164,6 +173,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
      */
+    //
     public <T> B option(ChannelOption<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
         if (value == null) {
@@ -209,6 +219,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      */
     @Override
     @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
+    // 创建一个当前Bootstrap的克隆，其具有和原始的Bootstrap相同的设置信息
     public abstract B clone();
 
     /**
@@ -222,6 +233,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     /**
      * Create a new {@link Channel} and bind it.
      */
+    // 绑定Channel并返回一个ChannelFuture，其将会在绑定操作完成后接收到通知，在那之后必须调用Channel，
+    // connect方法来建立连接
     public ChannelFuture bind() {
         validate();
         SocketAddress localAddress = this.localAddress;
@@ -356,6 +369,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     /**
      * the {@link ChannelHandler} to use for serving the requests.
      */
+    // 设置将被添加到ChannelPipeline以接收事件通知的ChannelHandler
     public B handler(ChannelHandler handler) {
         this.handler = ObjectUtil.checkNotNull(handler, "handler");
         return self();
