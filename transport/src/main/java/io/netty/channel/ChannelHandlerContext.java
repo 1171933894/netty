@@ -129,6 +129,14 @@ import java.nio.channels.Channels;
  * 链路关闭事件、读事件、异常通知事件等。
  * outbound事件通常是由用户主动发起的网络I/O操作，
  * 例如用户发起的连接操作、绑定操作、消息发送等操作。
+ *
+ * ChannelHandlerContext有很多的方法，其中一些方法
+ * 也存在于Channel和ChannelPipeline本身上，但是有一点
+ * 重要不同。如果调用Channel或者ChannelPipeline上的
+ * 这些方法，她们将沿着ChannelPipeline进行传播。而调用
+ * 位于ChannelHandlerContext上的相同方法，则将从当前
+ * 所关联的ChannelHandler开始，并且只会传播给位于该
+ * ChannlePipeline中的下一个能够处理该事件的ChannelHandler。
  */
 public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvoker, ChannelOutboundInvoker {
 
