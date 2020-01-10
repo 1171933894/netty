@@ -173,7 +173,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
      */
-    //
+    // 指定要应用到新创建的ServerChannel的channelConfig的ChannelOption。这些选项将会通过bind方法设置到Channel。在bind方法被调用之后，设置或者改变ChannelOption
+    // 都不会有任何的效果。所支持的ChannelOption取决于所使用的Channel类型
     public <T> B option(ChannelOption<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
         if (value == null) {
@@ -399,6 +400,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return attrs;
     }
 
+    // 指定ServerChannel应该绑定到的本地地址。如果没有指定，则将由操作系统使用
+    // 一个随机地址。或者，可以通过bind方法来指定该localAddress
     final SocketAddress localAddress() {
         return localAddress;
     }

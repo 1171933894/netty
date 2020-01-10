@@ -65,6 +65,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Specify the {@link EventLoopGroup} which is used for the parent (acceptor) and the child (client).
      */
     @Override
+    // 设置ServerBootstrap要用的EventLoopGroup。这个EventLoopGroup将用于ServerChannel和被
+    // 接受的子Channel的I/O处理
     public ServerBootstrap group(EventLoopGroup group) {
         return group(group, group);
     }
@@ -88,6 +90,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
      * {@link ChannelOption}.
      */
+    // 指定当子Channel被接受时，应用到子Channel的ChannelConfig的ChannelOption。所支持的
+    // ChannelOption取决于所使用的Channel的类型。
     public <T> ServerBootstrap childOption(ChannelOption<T> childOption, T value) {
         ObjectUtil.checkNotNull(childOption, "childOption");
         if (value == null) {
@@ -102,6 +106,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Set the specific {@link AttributeKey} with the given value on every child {@link Channel}. If the value is
      * {@code null} the {@link AttributeKey} is removed
      */
+    // 将属性设置给已经被接受的子Channel
     public <T> ServerBootstrap childAttr(AttributeKey<T> childKey, T value) {
         ObjectUtil.checkNotNull(childKey, "childKey");
         if (value == null) {
