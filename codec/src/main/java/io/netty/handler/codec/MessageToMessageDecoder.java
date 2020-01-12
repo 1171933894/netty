@@ -114,5 +114,6 @@ public abstract class MessageToMessageDecoder<I> extends ChannelInboundHandlerAd
      * @param out           the {@link List} to which decoded messages should be added
      * @throws Exception    is thrown if an error occurs
      */
+    // 对于每个需要被解码为另一种格式的入站消息来说，该方法都将会被调用。解码消息随后会被传递给ChannelPipeline中的下一个ChannelInboundHandler
     protected abstract void decode(ChannelHandlerContext ctx, I msg, List<Object> out) throws Exception;
 }

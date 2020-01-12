@@ -474,6 +474,10 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      * @param out           the {@link List} to which decoded messages should be added
      * @throws Exception    is thrown if an error occurs
      */
+    // 这是你必须实现的唯一抽象方法。decode方法被调用将会传入一个包含了传入数据的ByteBuf，以及一个用来添加解码消息
+    // 的list。对这个方法的调用将会重复进行，直到确定没有新的元素被添加到该list。对这个方法的调用将会重复进行，直到
+    // 确定没有新的元素被添加到该list，或者该ByteBuf中没有更多可读取的字节时为止。然后，如果该list不为空，那么它的内容将会被
+    // 传递给ChannelPipeline中的下一个ChannelInBoundHandler。
     protected abstract void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception;
 
     /**
@@ -509,6 +513,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      * By default this will just call {@link #decode(ChannelHandlerContext, ByteBuf, List)} but sub-classes may
      * override this for some special cleanup operation.
      */
+    //
     protected void decodeLast(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (in.isReadable()) {
             // Only call decode() if there is something left in the buffer to decode.
