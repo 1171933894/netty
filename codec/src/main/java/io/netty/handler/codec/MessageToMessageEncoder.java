@@ -149,5 +149,6 @@ public abstract class MessageToMessageEncoder<I> extends ChannelOutboundHandlerA
      *                      needs to do some kind of aggregation
      * @throws Exception    is thrown if an error occurs
      */
+    //
     protected abstract void encode(ChannelHandlerContext ctx, I msg, List<Object> out) throws Exception;
 }

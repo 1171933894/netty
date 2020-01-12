@@ -152,6 +152,8 @@ public abstract class MessageToByteEncoder<I> extends ChannelOutboundHandlerAdap
      * @param out           the {@link ByteBuf} into which the encoded message will be written
      * @throws Exception    is thrown if an error occurs
      */
+    // encode方法是你需要实现的唯一抽象方法。它被调用时将会传入要被该类编码为ByteBuf的（类型为I的）出站消息。该ByteBuf随后将
+    // 会被转发给ChannelPipeline中的下一个ChannelOutboundHandler。
     protected abstract void encode(ChannelHandlerContext ctx, I msg, ByteBuf out) throws Exception;
 
     protected boolean isPreferDirect() {
