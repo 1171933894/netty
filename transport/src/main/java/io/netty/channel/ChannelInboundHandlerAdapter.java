@@ -41,6 +41,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 链路（channel）注册
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelRegistered();
     }
@@ -53,6 +54,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 链路（channel）断开
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelUnregistered();
     }
@@ -65,6 +67,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 链路（channel）激活
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelActive();
     }
@@ -89,6 +92,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 接收到请求消息
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ctx.fireChannelRead(msg);
     }
@@ -101,6 +105,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 请求消息接收并处理完毕
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelReadComplete();
     }
@@ -113,6 +118,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 发生用户自定义事件
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         ctx.fireUserEventTriggered(evt);
     }
@@ -125,6 +131,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      */
     @Skip
     @Override
+    // 发送应答消息
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelWritabilityChanged();
     }
@@ -138,6 +145,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
     @Skip
     @Override
     @SuppressWarnings("deprecation")
+    // 链路发生异常
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
             throws Exception {
         ctx.fireExceptionCaught(cause);
