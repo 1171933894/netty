@@ -21,7 +21,7 @@ final class DefaultFutureListeners {
 
     private GenericFutureListener<? extends Future<?>>[] listeners;
     private int size;
-    private int progressiveSize; // the number of progressive listeners
+    private int progressiveSize; // the number of progressive listeners GenericProgressiveFutureListener在listeners中的个数
 
     @SuppressWarnings("unchecked")
     DefaultFutureListeners(

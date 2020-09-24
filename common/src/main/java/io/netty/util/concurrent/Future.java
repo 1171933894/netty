@@ -22,6 +22,16 @@ import java.util.concurrent.TimeUnit;
 /**
  * The result of an asynchronous operation.
  */
+
+/**
+ * jdk Future 只能用以下两种方式获取结果：
+ * 1）V get()阻塞等待
+ *  轮询boolean isDone();
+ *  有限等待V get(long timeout, TimeUnit unit)
+ * 2）执行状态只有两种
+ *  boolean isDone();
+ *  boolean isCancelled();
+ */
 @SuppressWarnings("ClassNameSameAsAncestorName")
 public interface Future<V> extends java.util.concurrent.Future<V> {
 
@@ -103,7 +113,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
     /**
      * Waits for this future to be completed without
      * interruption.  This method catches an {@link InterruptedException} and
-     * discards it silently.
+     * discards（丢弃） it silently（默默）.
      */
     Future<V> awaitUninterruptibly();
 

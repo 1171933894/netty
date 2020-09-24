@@ -162,7 +162,7 @@ import java.util.concurrent.TimeUnit;
  * }
  * </pre>
  */
-public interface ChannelFuture extends Future<Void> {
+public interface ChannelFuture extends Future<Void> {// 由上面范型为Void可知，ChannelFuture 的调用是没有返回值的
 
     /**
      * Returns a channel where the I/O operation associated with this

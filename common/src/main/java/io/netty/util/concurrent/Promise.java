@@ -18,7 +18,7 @@ package io.netty.util.concurrent;
 /**
  * Special {@link Future} which is writable.
  */
-public interface Promise<V> extends Future<V> {
+public interface Promise<V> extends Future<V> {// promise：诺言
 
     /**
      * Marks this future as a success and notifies all

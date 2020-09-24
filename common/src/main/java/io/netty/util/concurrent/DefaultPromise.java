@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+// promise 是可写的 future, 因为 future 不支持写操作接口，netty 使用 promise 扩展了 future, 可以对异步操作结果进行设置
 public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
     private static final InternalLogger rejectedExecutionLogger =
@@ -39,15 +40,25 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static final int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt("io.netty.defaultPromise.maxListenerStackDepth", 8));
     @SuppressWarnings("rawtypes")
+    // 使用 CAS 进行更新执行结果 result 字段
     private static final AtomicReferenceFieldUpdater<DefaultPromise, Object> RESULT_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultPromise.class, Object.class, "result");
+    // result 的几种 value
     private static final Object SUCCESS = new Object();
     private static final Object UNCANCELLABLE = new Object();
     private static final CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(ThrowableUtil.unknownStackTrace(
             new CancellationException(), DefaultPromise.class, "cancel(...)"));
     private static final StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
 
+    // 存储执行结果的变量
+    /**
+     * DefaultPromise 是通过 CAS 来进行更新执行的结果 result 字段的。
+     * 如果执行完成，无返回值则 result = SUCCESS，有返回值则 result = 执行结果。
+     * 如果执行未完成，result = UNCANCELLABLE。
+     * 如果执行异常，result = CANCELLATION_CAUSE_HOLDER。
+     */
     private volatile Object result;
+    // 执行的线程池
     private final EventExecutor executor;
     /**
      * One or more listeners. Can be a {@link GenericFutureListener} or a {@link DefaultFutureListeners}.
@@ -235,14 +246,19 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> await() throws InterruptedException {
+        // 通过 isDone() 方法判断是否执行完成，如果执行完成直接返回
         if (isDone()) {
             return this;
         }
 
+        // 判断当前线程是否被中断，如果中断则直接抛出 InterruptedException 异常
         if (Thread.interrupted()) {
             throw new InterruptedException(toString());
         }
 
+        /**
+         * 检查执行 Promise 任务的线程是否是当前线程，如果是当前线程再调用 await() 就会发生死锁的情况，抛出 BlockingOperationException 异常。就相当于获取结果和执行都是当前线程，自己调用 await() 方法把自己阻塞掉了
+         */
         checkDeadLock();
 
         synchronized (this) {
@@ -332,6 +348,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     @Override
     public V get() throws InterruptedException, ExecutionException {
         Object result = this.result;
+        // 首先判断该 Promise 是否执行完成，如果执行完成则继续执行，如果没有执行完成则挂起当前线程。
         if (!isDone0(result)) {
             await();
             result = this.result;
@@ -481,13 +498,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     private void notifyListeners() {
         EventExecutor executor = executor();
-        if (executor.inEventLoop()) {
+        if (executor.inEventLoop()) {// 判断执行 EventExecutor 的线程是否和当前线程一致
             final InternalThreadLocalMap threadLocals = InternalThreadLocalMap.get();
             final int stackDepth = threadLocals.futureListenerStackDepth();
             if (stackDepth < MAX_LISTENER_STACK_DEPTH) {
                 threadLocals.setFutureListenerStackDepth(stackDepth + 1);
                 try {
-                    notifyListenersNow();
+                    notifyListenersNow();// 调用 notifyListenersNow() 方法执行 listener
                 } finally {
                     threadLocals.setFutureListenerStackDepth(stackDepth);
                 }
@@ -551,6 +568,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
                 notifyListener0(this, (GenericFutureListener<?>) listeners);
             }
             synchronized (this) {
+                // 执行完 listeners 后，再次判断 this.listeners 是否为null，如果不为null，说明在执行过程中又有新的 listeners 添加进来，继续 for 循环执行。如果为 null 则return 退出 死循环
                 if (this.listeners == null) {
                     // Nothing can throw from within this method, so setting notifyingListeners back to false does not
                     // need to be in a finally block.
@@ -601,6 +619,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     private boolean setSuccess0(V result) {
+        // 如果 result == null 则设置为 SUCCESS，然后调用 setValue0() 方法
         return setValue0(result == null ? SUCCESS : result);
     }
 
@@ -611,7 +630,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private boolean setValue0(Object objResult) {
         if (RESULT_UPDATER.compareAndSet(this, null, objResult) ||
                 RESULT_UPDATER.compareAndSet(this, UNCANCELLABLE, objResult)) {
-            if (checkNotifyWaiters()) {
+            if (checkNotifyWaiters()) {// 进行唤醒所有 调用 DefaultPromise.get() 获取结果的线程
                 notifyListeners();
             }
             return true;
