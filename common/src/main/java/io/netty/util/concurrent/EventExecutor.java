@@ -27,33 +27,39 @@ public interface EventExecutor extends EventExecutorGroup {
     /**
      * Returns a reference to itself.
      */
+    // 要求子类固定返回self
     @Override
     EventExecutor next();
 
     /**
      * Return the {@link EventExecutorGroup} which is the parent of this {@link EventExecutor},
      */
+    // 所属的EventExecutorGroup
     EventExecutorGroup parent();
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument
      */
+    // 当前是否执行在该线程内
     boolean inEventLoop();
 
     /**
      * Return {@code true} if the given {@link Thread} is executed in the event loop,
      * {@code false} otherwise.
      */
+    // 参数线程，是否和EventExecutor是同一个线程
     boolean inEventLoop(Thread thread);
 
     /**
      * Return a new {@link Promise}.
      */
+    // 创建一个Promise
     <V> Promise<V> newPromise();
 
     /**
      * Create a new {@link ProgressivePromise}.
      */
+    // 创建一个ProgressivePromise
     <V> ProgressivePromise<V> newProgressivePromise();
 
     /**
@@ -61,6 +67,7 @@ public interface EventExecutor extends EventExecutorGroup {
      * will return {@code true}. All {@link FutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
+    // 创建一个已经处于成功完成状态的Future
     <V> Future<V> newSucceededFuture(V result);
 
     /**
@@ -68,5 +75,6 @@ public interface EventExecutor extends EventExecutorGroup {
      * will return {@code false}. All {@link FutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
+    // 创建一个已经处于失败状态的Future
     <V> Future<V> newFailedFuture(Throwable cause);
 }

@@ -56,6 +56,7 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
      *
      * @return the {@link #terminationFuture()}
      */
+    // 从shutdown相关方法可以看出，它对线程组关闭过程有更精确的控制，客户代码可异步监听关闭事件
     Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit);
 
     /**
@@ -81,6 +82,7 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     /**
      * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.
      */
+    // 选择EventExecutor
     EventExecutor next();
 
     @Override
