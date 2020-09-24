@@ -478,7 +478,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         public void run() {
                             register0(promise);
                         }
-                    });
+                    });// 开始真正的异步，boss 线程开始启动
                 } catch (Throwable t) {
                     logger.warn(
                             "Force-closing a channel whose registration task was not accepted by an event loop: {}",

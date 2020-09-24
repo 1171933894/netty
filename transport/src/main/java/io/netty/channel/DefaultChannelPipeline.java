@@ -199,7 +199,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
-            checkMultiplicity(handler);
+            checkMultiplicity(handler);// multiplicity：多重性
 
             newCtx = newContext(group, filterName(name, handler), handler);
 
