@@ -59,7 +59,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
              *
              *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
              */
-            return provider.openServerSocketChannel();
+            return provider.openServerSocketChannel();// 熟悉的 NIO，创建了一个 ServerSocketChannel 实例
         } catch (IOException e) {
             throw new ChannelException(
                     "Failed to open a server socket.", e);
@@ -88,6 +88,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
         super(null, channel, SelectionKey.OP_ACCEPT);
+        // 这个 config 对象用于配置这个 NioServerSocketChannel ，用于外部获取参数和配置
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
 
@@ -173,8 +174,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     }
 
     /**
-     * 以下是与服务端Channel无关的接口定义，由于这些方法是客户端Channel相关的，
-     * 因此，对于服务端Channel无须实现。
+     * 以下是与服务端Channel无关的接口定义，由于这些方法是客户端Channel相关的，因此，对于服务端Channel无须实现。
      */
 
     // Unnecessary stuff

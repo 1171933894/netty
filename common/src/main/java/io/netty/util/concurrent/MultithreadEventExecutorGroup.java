@@ -66,6 +66,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
+    // 1.默认0，2executor 默认null， 3.nio provider，4.new DefaultSelectStrategyFactory() 是个单例，5.默认拒绝策略：抛出异常
+    // args : 3-5, 线程数默认: NettyRuntime.availableProcessors() * 2，也就是 CPU core * 2
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
                                             EventExecutorChooserFactory chooserFactory, Object... args) {
         if (nThreads <= 0) {
@@ -73,20 +75,24 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         if (executor == null) {
+            // 类名为名称的线程工厂：该线程池没有任何队列，提交任务后，创建任何线程类型都是 FastThreadLocalRunnable, 并且立即start。
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
+        // 创建一个事件执行组
         children = new EventExecutor[nThreads];
-
+        // 初始化线程数组
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
+                // 创建 new NioEventLoop
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
                 // TODO: Think about if this is a good exception type
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
+                // 如果创建失败，优雅关闭
                 if (!success) {
                     for (int j = 0; j < i; j ++) {
                         children[j].shutdownGracefully();

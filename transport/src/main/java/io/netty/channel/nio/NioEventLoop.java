@@ -56,8 +56,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 /**
- * NioEventLoop并不是一个纯粹的I/O线程，它除了负责I/O的读写之外，还
- * 兼顾处理以下两类任务。
+ * NioEventLoop并不是一个纯粹的I/O线程，它除了负责I/O的读写之外，还兼顾处理以下两类任务。
  * 1）系统task。通过execute(Runnable task)方法
  * 2）定时任务。通过schedule(Runnable command, long delay, TimeUnit unit)方法实现。
  */

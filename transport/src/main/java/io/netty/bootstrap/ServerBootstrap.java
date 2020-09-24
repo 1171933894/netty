@@ -129,6 +129,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     @Override
     void init(Channel channel) {
+        // 设置 NioServerSocketChannel 的 TCP 属性
         setChannelOptions(channel, options0().entrySet().toArray(EMPTY_OPTION_ARRAY), logger);
         setAttributes(channel, attrs0().entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));
 
@@ -140,6 +141,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 childOptions.entrySet().toArray(EMPTY_OPTION_ARRAY);
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = childAttrs.entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY);
 
+        // 对 NioServerSocketChannel 的 ChannelPipeline 添加 ChannelInitializer 处理器
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) {
