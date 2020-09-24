@@ -92,33 +92,37 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * @return the parent channel.
      *         {@code null} if this channel does not have a parent channel.
      */
-    // 对于服务端Channel而言，它的父Channel为空；对于客户端Channel，它的父Channel就是
-    // 创建它的ServerSocketChannel。
+    // 对于服务端Channel而言，它的父Channel为空；对于客户端Channel，它的父Channel就是创建它的ServerSocketChannel。
     Channel parent();
 
     /**
      * Returns the configuration of this channel.
      */
+    // 获取当前 Channel 的配置信息，例如CONNECT_TIMEOUT_MILLIS
     ChannelConfig config();
 
     /**
      * Returns {@code true} if the {@link Channel} is open and may get active later
      */
+    // 判断当前Channel是否已经打开
     boolean isOpen();
 
     /**
      * Returns {@code true} if the {@link Channel} is registered with an {@link EventLoop}.
      */
+    // 判断当前Channel是否已经注册到EventLoop上
     boolean isRegistered();
 
     /**
      * Return {@code true} if the {@link Channel} is active and so connected.
      */
+    // 判断当前Channel是否已经处于激活状态
     boolean isActive();
 
     /**
      * Return the {@link ChannelMetadata} of the {@link Channel} which describe the nature of the {@link Channel}.
      */
+    // 获取当前Channel 的元数据描述信息，包括TCP参数配置等
     ChannelMetadata metadata();
 
     /**
@@ -130,6 +134,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * @return the local address of this channel.
      *         {@code null} if this channel is not bound.
      */
+    // 获取当前Channel的本地绑定地址
     SocketAddress localAddress();
 
     /**
@@ -146,6 +151,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      *         the origination of the received message as this method will
      *         return {@code null}.
      */
+    // 取当前Channel通信的远程Socket地址
     SocketAddress remoteAddress();
 
     /**

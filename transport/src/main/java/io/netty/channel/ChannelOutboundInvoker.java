@@ -32,6 +32,7 @@ public interface ChannelOutboundInvoker {
      * called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    // 绑定指定的本地Socket地址localAddress，该方法会级联出发其他ch的bind方法
     ChannelFuture bind(SocketAddress localAddress);
 
     /**
@@ -47,6 +48,11 @@ public interface ChannelOutboundInvoker {
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
+    /**
+     * 客户端使用指定的服务端地址remoteAddress发起连接请求，如果连接因为应答超时而失败，ChannelFuture中的操作结果就
+     * 是ConnectTimeoutException异常;如果连接被拒绝，操作结果为ConnectException。 该方法
+     * 会级联触发ChannelHandler.connect(ChannelHandlerContext, SocketAddress, SocketAddress, ChannelPromise)事件。
+     */
     ChannelFuture connect(SocketAddress remoteAddress);
 
     /**
@@ -58,6 +64,9 @@ public interface ChannelOutboundInvoker {
      * {@link ChannelOutboundHandler#connect(ChannelHandlerContext, SocketAddress, SocketAddress, ChannelPromise)}
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
+     */
+    /**
+     * 先绑定指定的本地地址localAddress，然后再连接服务端
      */
     ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress);
 
@@ -129,7 +138,7 @@ public interface ChannelOutboundInvoker {
      * method called of the next {@link ChannelOutboundHandler} contained in the {@link ChannelPipeline} of the
      * {@link Channel}.
      */
-    // 连接服务端事件
+    // 连接服务端事件，携带了ChannelPromise参数用于写入操作结果。
     ChannelFuture connect(SocketAddress remoteAddress, ChannelPromise promise);
 
     /**
@@ -158,6 +167,9 @@ public interface ChannelOutboundInvoker {
      * {@link Channel}.
      */
     // 断开连接事件
+    /**
+     * 请求断开与远程通信对端的连接并使用ChannelPromise 来获取操作结果的通知消息。该方法会级联触发ChannelHandler.disconnect(ChannelHandlerContext, ChannelPromise)事件。
+     */
     ChannelFuture disconnect(ChannelPromise promise);
 
     /**
@@ -174,6 +186,11 @@ public interface ChannelOutboundInvoker {
      * {@link Channel}.
      */
     // 关闭当前Channel事件
+
+    /**
+     * 主动关闭当前连接，通过ChannelPromise设置操作结果并进行结果通知，无论操作是否成功，都可以通过ChannelPromise
+     * 获取操作结果。该操作会级联触发 ChannelPipeline 中所有ChannelHandler 的 ChannelHandler.close(ChannelHandlerContext, ChannelPromise)事件。
+     */
     ChannelFuture close(ChannelPromise promise);
 
     /**
@@ -210,6 +227,9 @@ public interface ChannelOutboundInvoker {
      * This method will not request to actual flush, so be sure to call {@link #flush()}
      * once you want to request to flush all pending data to the actual transport.
      */
+    /**
+     * 请求将当前的msg通过ChannelPipeline写入到目标Channel中。注意，write 操作只是将消息存入到消息发送环形数组中，并没有真正被发送，只有调用flush 操作才会被写入到Channel中，发送给对方。
+     */
     ChannelFuture write(Object msg);
 
     /**
@@ -217,18 +237,19 @@ public interface ChannelOutboundInvoker {
      * This method will not request to actual flush, so be sure to call {@link #flush()}
      * once you want to request to flush all pending data to the actual transport.
      */
-    // 发送事件
+    // 功能与write(Object msg)
     ChannelFuture write(Object msg, ChannelPromise promise);
 
     /**
      * Request to flush all pending messages via this ChannelOutboundInvoker.
      */
-    // 刷新事件
+    // 将之前写入到发送环形数组中的消息全部写入到目标Chanel中，发送给通信对方。
     ChannelOutboundInvoker flush();
 
     /**
      * Shortcut for call {@link #write(Object, ChannelPromise)} and {@link #flush()}.
      */
+    // 它会将消息写入Channel中发送，等价于单独调用write和flush
     ChannelFuture writeAndFlush(Object msg, ChannelPromise promise);
 
     /**
