@@ -228,6 +228,9 @@ public abstract class AbstractByteBuf extends ByteBuf {
         if (readerIndex != writerIndex) {
             setBytes(0, this, readerIndex, writerIndex - readerIndex);
             writerIndex -= readerIndex;
+            /**
+             * 调整markedReaderIndex和markedWriterIndex
+             */
             adjustMarkers(readerIndex);
             readerIndex = 0;// 重置读索引
         } else {
@@ -992,7 +995,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
     @Override
     public ByteBuf skipBytes(int length) {
         checkReadableBytes(length);
-        readerIndex += length;
+        readerIndex += length;// 设置新的读索引为旧的索引值与跳跃的长度之和
         return this;
     }
 
