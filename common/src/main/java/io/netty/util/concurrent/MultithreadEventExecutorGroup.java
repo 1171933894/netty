@@ -30,11 +30,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
-    private final EventExecutor[] children;
-    private final Set<EventExecutor> readonlyChildren;
-    private final AtomicInteger terminatedChildren = new AtomicInteger();
-    private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
-    private final EventExecutorChooserFactory.EventExecutorChooser chooser;
+    private final EventExecutor[] children;// Group所包含的EventExecutor数组
+    private final Set<EventExecutor> readonlyChildren;// children的只读外观集合
+    private final AtomicInteger terminatedChildren = new AtomicInteger();// 已经关闭child EventExecutor
+    private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);// 一个标记Group关闭状态的Futuire
+    private final EventExecutorChooserFactory.EventExecutorChooser chooser;// 选择child EventExecutor的选择器对象，用来实现EventExecutorGroup.next()方法
 
     /**
      * Create a new instance.
@@ -79,13 +79,13 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
-        // 创建一个事件执行组
+        // EventExecutor数组长度就是指定线程数量
         children = new EventExecutor[nThreads];
         // 初始化线程数组
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
-                // 创建 new NioEventLoop
+                // 创建EventExecutor的newChild是子类实现的，args参数列表，Group并不使用，而是透传给每个child EventExecutor
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
@@ -114,6 +114,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         }
 
+        //初始化EventExecutor选择器，默认的选择逻辑其实很简单，就是轮询
         chooser = chooserFactory.newChooser(children);
 
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
