@@ -224,7 +224,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      *   <li>{@link #voidPromise()}</li>
      * </ul>
      */
-    interface Unsafe {
+    interface Unsafe {// Channel接口的辅助接口，I/O读写操作都是由Unsafe接口负责完成的
 
         /**
          * Return the assigned {@link RecvByteBufAllocator.Handle} which will be used to allocate {@link ByteBuf}'s when
