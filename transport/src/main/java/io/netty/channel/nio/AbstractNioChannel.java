@@ -50,13 +50,13 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(AbstractNioChannel.class);
 
-    // 由于NIO Channel、NioSocketChannel和NioServerSocketChannel需要公用，
-    // 所以定义了一个SocketChannel和ServerSocketChannel的公共父类SelectableChannel，
-    // 用于设置SelectableChannel参数和进行I/O操作。
+    /**
+     * 由于NIO Channel、NioSocketChannel和NioServerSocketChannel需要公用，所以定义了一个SocketChannel和ServerSocketChannel的公共父类SelectableChannel，用于设置SelectableChannel参数和进行I/O操作。
+     */
     private final SelectableChannel ch;
     // 代表JDK SelectionKey的OP_READ
     protected final int readInterestOp;
-    volatile SelectionKey selectionKey;
+    volatile SelectionKey selectionKey;// 注意有volatile修饰
     boolean readPending;
     private final Runnable clearReadPendingRunnable = new Runnable() {
         @Override
