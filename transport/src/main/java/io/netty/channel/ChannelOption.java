@@ -115,6 +115,20 @@ public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
     public static final ChannelOption<Integer> SO_RCVBUF = valueOf("SO_RCVBUF");
     public static final ChannelOption<Boolean> SO_REUSEADDR = valueOf("SO_REUSEADDR");
     public static final ChannelOption<Integer> SO_LINGER = valueOf("SO_LINGER");
+    /**
+     * backlog指定了内核为此套接口排队的最大连接个数，对于给定的监听套接口，内核
+     * 要维护两个队列:未链接队列和已连接队列，根据TCP三路握手过程中三个分节来分隔
+     * 这两个队列。服务器处于listen 状态时，收到客户端syn分节(connect) 时在未完成队列
+     * 中创建一个新的条目，然后用三路握手的第二个分节即服务器的syn响应客户端，此条目
+     * 在第三个分节到达前(客户端对服务器syn的ack)一直保留在未完成连接队列中，如果
+     * 三路握手完成，该条目将从未完成连接队列搬到已完成连接队列尾部。当进程调用accept
+     * 时，从已完成队列中的头部取出一个条目给进程，当已完成队列为空时进程将睡眠，直到
+     * 有条目在已完成连接队列中才唤醒。backlog 被规定为两个队列总和的最大值，大多数实
+     * 现默认值为5，但在高并发Web服务器中此值显然不够，Lighttpd 中此值达到128x8。需
+     * 要设置此值更大一些的原因是未完成连接队列的长度可能因为客户端syn的到达及等待三
+     * 路握手第三个分节的到达延时而增大。Netty 默认的backlog为100， 当然，用户可以修改
+     * 默认值，这需要根据实际场景和网络状况进行灵活设置。
+     */
     public static final ChannelOption<Integer> SO_BACKLOG = valueOf("SO_BACKLOG");
     public static final ChannelOption<Integer> SO_TIMEOUT = valueOf("SO_TIMEOUT");
 

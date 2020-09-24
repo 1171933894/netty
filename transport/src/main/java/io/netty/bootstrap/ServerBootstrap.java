@@ -49,6 +49,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     private final Map<AttributeKey<?>, Object> childAttrs = new ConcurrentHashMap<AttributeKey<?>, Object>();
     private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
     private volatile EventLoopGroup childGroup;
+    /**
+     * NioServerSocketChannel使用，所有连接该监听端口的客户端都会执行它
+     */
     private volatile ChannelHandler childHandler;
 
     public ServerBootstrap() { }
@@ -65,8 +68,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Specify the {@link EventLoopGroup} which is used for the parent (acceptor) and the child (client).
      */
     @Override
-    // 设置ServerBootstrap要用的EventLoopGroup。这个EventLoopGroup将用于ServerChannel和被
-    // 接受的子Channel的I/O处理
+    // 设置ServerBootstrap要用的EventLoopGroup。这个EventLoopGroup将用于ServerChannel和被接收的子Channel的I/O处理
     public ServerBootstrap group(EventLoopGroup group) {
         return group(group, group);
     }
@@ -90,8 +92,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
      * {@link ChannelOption}.
      */
-    // 指定当子Channel被接受时，应用到子Channel的ChannelConfig的ChannelOption。所支持的
-    // ChannelOption取决于所使用的Channel的类型。
+    // 指定当子Channel被接收时，应用到子Channel的ChannelConfig的ChannelOption。所支持的ChannelOption取决于所使用的Channel的类型。
     public <T> ServerBootstrap childOption(ChannelOption<T> childOption, T value) {
         ObjectUtil.checkNotNull(childOption, "childOption");
         if (value == null) {
@@ -121,6 +122,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
      */
     public ServerBootstrap childHandler(ChannelHandler childHandler) {
+        // 注意：覆盖方式
         this.childHandler = ObjectUtil.checkNotNull(childHandler, "childHandler");
         return this;
     }
