@@ -132,6 +132,7 @@ public class FastThreadLocal<V> {
      * Returns the current value for the current thread
      */
     @SuppressWarnings("unchecked")
+    // 获取ThreadLocal当前线程对应保存的数据，与ThreadLocal中的get()功能相同
     public final V get() {
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
         Object v = threadLocalMap.indexedVariable(index);
@@ -139,6 +140,7 @@ public class FastThreadLocal<V> {
             return (V) v;
         }
 
+        // 为NULL 则调用initialize(...)方法
         return initialize(threadLocalMap);
     }
 

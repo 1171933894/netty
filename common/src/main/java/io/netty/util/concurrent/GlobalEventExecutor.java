@@ -36,14 +36,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * task pending in the task queue for 1 second.  Please note it is not scalable to schedule large number of tasks to
  * this executor; use a dedicated executor.
  */
+// GlobalEventExecutor是具备任务队列的单线程事件执行器,其适合用来实行时间短，碎片化的任务
 public final class GlobalEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
 
     private static final long SCHEDULE_QUIET_PERIOD_INTERVAL = TimeUnit.SECONDS.toNanos(1);
 
+    // 单例对象
     public static final GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
-
+    // 维护的任务队列
     final BlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
     final ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(
             this, Executors.<Void>callable(new Runnable() {
@@ -57,10 +59,10 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
     // be sticky about its thread group
     // visible for testing
-    final ThreadFactory threadFactory;
-    private final TaskRunner taskRunner = new TaskRunner();
-    private final AtomicBoolean started = new AtomicBoolean();
-    volatile Thread thread;
+    final ThreadFactory threadFactory;// 线程工厂
+    private final TaskRunner taskRunner = new TaskRunner();// 一个循环运行的执行器
+    private final AtomicBoolean started = new AtomicBoolean();// 标记当前线程是否启动
+    volatile Thread thread;// 运行中的线程
 
     private final Future<?> terminationFuture = new FailedFuture<Object>(this, new UnsupportedOperationException());
 
