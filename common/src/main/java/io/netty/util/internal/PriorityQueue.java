@@ -30,7 +30,7 @@ public interface PriorityQueue<T> extends Queue<T> {
 
     /**
      * Notify the queue that the priority for {@code node} has changed. The queue will adjust to ensure the priority
-     * queue properties are maintained.
+     * queue properties are maintained（保持）.
      * @param node An object which is in this queue and the priority may have changed.
      */
     void priorityChanged(T node);

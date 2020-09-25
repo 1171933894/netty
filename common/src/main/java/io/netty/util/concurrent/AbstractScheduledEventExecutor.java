@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.
  */
+// AbstractScheduledEventExecutor实现了任务调度的功能，它完全就是java ScheduleExecutor的翻版，通过一个优先级队列存放调度任务（ScheduledFutureTask），以任务的下次执行时间作为优先级。
 public abstract class AbstractScheduledEventExecutor extends AbstractEventExecutor {
     private static final Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
             new Comparator<ScheduledFutureTask<?>>() {

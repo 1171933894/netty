@@ -55,12 +55,14 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
+    // Executor的状态常量
     private static final int ST_NOT_STARTED = 1;
     private static final int ST_STARTED = 2;
     private static final int ST_SHUTTING_DOWN = 3;
     private static final int ST_SHUTDOWN = 4;
     private static final int ST_TERMINATED = 5;
 
+    // 一个占位符任务，必要时用来启动Thread
     private static final Runnable NOOP_TASK = new Runnable() {
         @Override
         public void run() {
@@ -74,29 +76,43 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
+    // 一个任务队列
     private final Queue<Runnable> taskQueue;
 
+    // 驱动Executor运行的线程
     private volatile Thread thread;
     @SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
+    // 这个executor充当线程工厂的角色
     private final Executor executor;
+    // interrupted标记
     private volatile boolean interrupted;
 
     private final CountDownLatch threadLock = new CountDownLatch(1);
+    // shutdownHooks，Executor关闭时执行
     private final Set<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
+    // 这是一个标记位：向Executor添加任务能否唤醒阻塞的线程
     private final boolean addTaskWakesUp;
+    // 排队等待的任务数量上限
     private final int maxPendingTasks;
+    // 当任务无法提交时的处理器
     private final RejectedExecutionHandler rejectedExecutionHandler;
 
+    // 上一次执行任务的时间戳
     private long lastExecutionTime;
 
     @SuppressWarnings({ "FieldMayBeFinal", "unused" })
+    // 该Executor的状态
     private volatile int state = ST_NOT_STARTED;
 
+    // gracefulShutdown过程中的静默期
     private volatile long gracefulShutdownQuietPeriod;
+    // gracefulShutdown总的时间限制
     private volatile long gracefulShutdownTimeout;
+    // gracefulShutdown开始时间戳
     private long gracefulShutdownStartTime;
 
+    // 同步该Executor终结状态的Future对象
     private final Promise<?> terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
@@ -156,7 +172,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         super(parent);
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = Math.max(16, maxPendingTasks);
-        this.executor = ThreadExecutorMap.apply(executor, this);
+        this.executor = ThreadExecutorMap.apply(executor, this);// 这里给executor包装了一层
         taskQueue = newTaskQueue(this.maxPendingTasks);
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
     }
