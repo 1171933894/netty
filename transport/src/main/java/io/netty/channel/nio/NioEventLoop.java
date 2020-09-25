@@ -73,6 +73,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;// 用于标识Selector空轮询的阈值，当超过这个阈值的话则需要重构Selector
 
     // selectNow提供器
+    /**
+     * selectNowSupplier提供的selectNow()操作是通过封装过的selector(即，SelectedSelectionKeySetSelector对象)来完成的。而SelectedSelectionKeySetSelector的selectorNow()方法处理委托真实的selector完成selectoNow()操作外，还会将selectionKeys清空
+     */
     private final IntSupplier selectNowSupplier = new IntSupplier() {
         @Override
         public int get() throws Exception {
@@ -451,6 +454,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             try {
                 int strategy;
                 try {
+                    // 根据当前NioEventLoop中是否有待完成的任务得出select策略，进行相应的select操作
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
                     case SelectStrategy.CONTINUE:

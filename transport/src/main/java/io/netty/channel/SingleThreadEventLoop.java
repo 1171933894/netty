@@ -135,6 +135,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         runAllTasksFrom(tailTasks);
     }
 
+    // 用于判断taskQueue或tailTasks中是否有任务
     @Override
     protected boolean hasTasks() {
         return super.hasTasks() || !tailTasks.isEmpty();
