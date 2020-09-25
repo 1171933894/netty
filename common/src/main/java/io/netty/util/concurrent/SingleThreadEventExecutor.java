@@ -76,7 +76,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
-    // 一个任务队列
+    // 用于存储任务的队列，是一个MpscUnboundedArrayQueue实例。
     private final Queue<Runnable> taskQueue;
 
     // 驱动Executor运行的线程

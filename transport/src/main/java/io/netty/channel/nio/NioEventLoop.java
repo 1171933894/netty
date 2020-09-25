@@ -70,8 +70,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             SystemPropertyUtil.getBoolean("io.netty.noKeySetOptimization", false);
 
     private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
-    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;
+    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;// 用于标识Selector空轮询的阈值，当超过这个阈值的话则需要重构Selector
 
+    // selectNow提供器
     private final IntSupplier selectNowSupplier = new IntSupplier() {
         @Override
         public int get() throws Exception {
@@ -99,8 +100,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             } catch (final SecurityException e) {
                 logger.debug("Unable to get/set System Property: " + key, e);
             }
-        }
+        }// 解决在java6 中 NIO Selector.open()可能抛出NPE异常的问题。
 
+        /**
+         * 如果有设置系统属性”io.netty.selectorAutoRebuildThreshold”，并且该属性值大于MIN_PREMATURE_SELECTOR_RETURNS(即，3)，那么该属性值就为阈值；如果该属性值小于MIN_PREMATURE_SELECTOR_RETURNS(即，3)，那么阈值为0。如果没有设置系统属性”io.netty.selectorAutoRebuildThreshold”，那么阈值为512，即，默认情况下阈值为512
+         */
         int selectorAutoRebuildThreshold = SystemPropertyUtil.getInt("io.netty.selectorAutoRebuildThreshold", 512);
         if (selectorAutoRebuildThreshold < MIN_PREMATURE_SELECTOR_RETURNS) {
             selectorAutoRebuildThreshold = 0;
@@ -134,6 +138,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private final SelectStrategy selectStrategy;
 
+    // 在事件循环中期待用于处理I/O操作时间的百分比。默认为50%。
+    // 也就是说，在事件循环中默认情况下用于处理I/O操作的时间和用于处理任务的时间百分比都为50%，
+    // 即，用于处理I/O操作的时间和用于处理任务的时间时一样的。用户可以根据实际情况来修改这个比率。
     private volatile int ioRatio = 50;
     private int cancelledKeys;
     private boolean needsToSelectAgain;

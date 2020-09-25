@@ -34,7 +34,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     protected static final int DEFAULT_MAX_PENDING_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventLoop.maxPendingTasks", Integer.MAX_VALUE));
-
+    // 是一个MpscUnboundedArrayQueue实例。用于存储当前或下一次事件循环(eventloop)迭代结束后需要执行的任务。
     private final Queue<Runnable> tailTasks;
 
     protected SingleThreadEventLoop(EventLoopGroup parent, ThreadFactory threadFactory, boolean addTaskWakesUp) {
