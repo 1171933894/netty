@@ -56,9 +56,11 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 /**
- * NioEventLoop并不是一个纯粹的I/O线程，它除了负责I/O的读写之外，还兼顾处理以下两类任务。
- * 1）系统task。通过execute(Runnable task)方法
- * 2）定时任务。通过schedule(Runnable command, long delay, TimeUnit unit)方法实现。
+ * 1、NioEventLoop并不是一个纯粹的I/O线程，它除了负责I/O的读写之外，还兼顾处理以下两类任务。（runAllTasks方法触发）
+ *  1）系统task。通过execute(Runnable task)方法
+ *  2）定时任务。通过schedule(Runnable command, long delay, TimeUnit unit)方法实现。
+ * 2、其中，I/O任务有：即selectionKey中ready的事件，如accept、connect、read、write等。（processSelectedKeys触发）
+ * 3、两种任务的执行时间比由变量ioRatio控制，默认为50，则表示允许非IO任务执行的时间与IO任务的执行时间相等。
  */
 public final class NioEventLoop extends SingleThreadEventLoop {
 
@@ -455,6 +457,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 int strategy;
                 try {
                     // 根据当前NioEventLoop中是否有待完成的任务得出select策略，进行相应的select操作
+                    /**
+                     * -> 如果taskQueue中有元素，执行 selectNow() 方法，最终执行selector.selectNow()，该方法会立即返回。
+                     * -> 如果taskQueue没有元素，执行 select(oldWakenUp) 方法，代码如下：
+                     */
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
                     case SelectStrategy.CONTINUE:
