@@ -177,9 +177,7 @@ import java.lang.annotation.Target;
  */
 
 /**
- * ChannelHandler类似于Servlet的Filter过滤器，负责对I/O事件或者I/O操作
- * 进行拦截和处理，它可以选择性地拦截和处理自己感兴趣的事件，也可以透传和终止
- * 事件的传递。
+ * ChannelHandler类似于Servlet的Filter过滤器，负责对I/O事件或者I/O操作进行拦截和处理，它可以选择性地拦截和处理自己感兴趣的事件，也可以透传和终止事件的传递。
  *
  * ChannelHandler主要分类有：
  * 1）系统ChannelHandler，用于I/O操作和事件进行预处理，对于用户不可见，这类ChannelHandler主要包括HeadHandler和TailHandler。
@@ -191,12 +189,14 @@ public interface ChannelHandler {
     /**
      * Gets called after the {@link ChannelHandler} was added to the actual context and it's ready to handle events.
      */
+    // Handler本身被添加到ChannelPipeline时调用
     void handlerAdded(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * Gets called after the {@link ChannelHandler} was removed from the actual context and it doesn't handle events
      * anymore.
      */
+    // Handler本身被从ChannelPipeline中删除时调用
     void handlerRemoved(ChannelHandlerContext ctx) throws Exception;
 
     /**
@@ -205,6 +205,7 @@ public interface ChannelHandler {
      * @deprecated if you want to handle this event you should implement {@link ChannelInboundHandler} and
      * implement the method there.
      */
+    // 发生异常时调用
     @Deprecated
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception;
 
@@ -219,6 +220,9 @@ public interface ChannelHandler {
      * <p>
      * This annotation is provided for documentation purpose, just like
      * <a href="http://www.javaconcurrencyinpractice.com/annotations/doc/">the JCIP annotations</a>.
+     */
+    /**
+     * 如果每个客户端连接都新建一个ChannelHandler实例，当有大量客户端时，服务器将保存大量的ChannelHandler实例。为此，Netty提供了Sharable注解，如果一个ChannelHandler状态无关，那么可将其标注为Sharable，如此，服务器只需保存一个实例就能处理所有客户端的事件。
      */
     @Inherited
     @Documented

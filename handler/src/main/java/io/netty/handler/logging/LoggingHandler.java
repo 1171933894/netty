@@ -43,9 +43,11 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     private static final LogLevel DEFAULT_LEVEL = LogLevel.DEBUG;
 
+    // 实际使用的日志处理，slf4j、log4j等
     protected final InternalLogger logger;
+    // 日志框架使用的日志级别
     protected final InternalLogLevel internalLevel;
-
+    // Netty使用的日志级别
     private final LogLevel level;
 
     /**
@@ -64,6 +66,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
      */
     public LoggingHandler(LogLevel level) {
         this.level = ObjectUtil.checkNotNull(level, "level");
+        // 获得实际的日志框架
         logger = InternalLoggerFactory.getInstance(getClass());
         internalLevel = level.toInternalLevel();
     }
