@@ -117,6 +117,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         //初始化EventExecutor选择器，默认的选择逻辑其实很简单，就是轮询
         chooser = chooserFactory.newChooser(children);
 
+        // 监听每个EventExecutor的关闭状态，所有EventExecutor都关闭了，Group也就关闭了
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
@@ -126,10 +127,11 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         };
 
-        for (EventExecutor e: children) {
+        for (EventExecutor e: children) {// 每个都添加添加一个监听，用于处理完成事件
             e.terminationFuture().addListener(terminationListener);
         }
 
+        // 这里搞一个只读的EventLoop集合
         Set<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
@@ -139,6 +141,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         return new DefaultThreadFactory(getClass());
     }
 
+    // chooser选择下一个EventExecutor
     @Override
     public EventExecutor next() {
         return chooser.next();
