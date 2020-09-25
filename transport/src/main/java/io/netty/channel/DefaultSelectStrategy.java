@@ -25,6 +25,11 @@ final class DefaultSelectStrategy implements SelectStrategy {
 
     private DefaultSelectStrategy() { }
 
+    /**
+     * 如果当前的EventLoop中有待处理的任务，那么会调用selectSupplier.get()方法，也就是最终会调用Selector.selectNow()方法，并清空selectionKeys。
+     * Selector.selectNow()方法不会发生阻塞，如果没有一个channel(即，该channel注册的事件发生了)被选择也会立即返回，否则返回就绪I/O事件的个数。
+     * 如果当前的EventLoop中没有待处理的任务，那么返回’SelectStrategy.SELECT(即，-1)’。
+     */
     @Override
     public int calculateStrategy(IntSupplier selectSupplier, boolean hasTasks) throws Exception {
         return hasTasks ? selectSupplier.get() : SelectStrategy.SELECT;
