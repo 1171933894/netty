@@ -68,6 +68,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
      *                      {@link #exceptionCaught(ChannelHandlerContext, Throwable)} which will by default close
      *                      the {@link Channel}.
      */
+    // ChannelInitializer的实现类必须要重写这个方法，这个方法在Channel被注册到EventLoop的时候会被调用
     protected abstract void initChannel(C ch) throws Exception;
 
     @Override
@@ -126,7 +127,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
     private boolean initChannel(ChannelHandlerContext ctx) throws Exception {
         if (initMap.add(ctx)) { // Guard against re-entrance.
             try {
-                initChannel((C) ctx.channel());
+                initChannel((C) ctx.channel());// 调用子类重写的initChannel方法
             } catch (Throwable cause) {
                 // Explicitly call exceptionCaught(...) as we removed the handler before calling initChannel(...).
                 // We do so to prevent multiple calls to initChannel(...).
@@ -134,7 +135,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
             } finally {
                 ChannelPipeline pipeline = ctx.pipeline();
                 if (pipeline.context(this) != null) {
-                    pipeline.remove(this);
+                    pipeline.remove(this);// 将ChannelInitializer从pipeline中移除
                 }
             }
             return true;
