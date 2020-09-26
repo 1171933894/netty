@@ -59,6 +59,7 @@ import static io.netty.channel.ChannelHandlerMask.mask;
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
+    // Context形成双向链表，next和prev分别是后继节点和前驱节点
     volatile AbstractChannelHandlerContext next;
     volatile AbstractChannelHandlerContext prev;
 
@@ -68,15 +69,15 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     /**
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} is about to be called.
      */
-    private static final int ADD_PENDING = 1;
+    private static final int ADD_PENDING = 1;// 对应Handler的handlerAdded方法将要被调用但还未调用
     /**
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called.
      */
-    private static final int ADD_COMPLETE = 2;
+    private static final int ADD_COMPLETE = 2;// 对应Handler的handlerAdded方法被调用
     /**
      * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
-    private static final int REMOVE_COMPLETE = 3;
+    private static final int REMOVE_COMPLETE = 3;// 对应Handler的handlerRemoved方法被调用
     /**
      * Neither {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
@@ -84,13 +85,13 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private static final int INIT = 0;
 
     private final DefaultChannelPipeline pipeline;
-    private final String name;
-    private final boolean ordered;
+    private final String name;// Context的名称
+    private final boolean ordered;// 事件顺序标记
     private final int executionMask;
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
     // child executor.
-    final EventExecutor executor;
+    final EventExecutor executor;// 事件执行线程
     private ChannelFuture succeededFuture;
 
     // Lazily instantiated tasks used to trigger events to a handler with different executor.
@@ -106,7 +107,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         this.executor = executor;
         this.executionMask = mask(handlerClass);
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
-        ordered = executor == null || executor instanceof OrderedEventExecutor;
+        ordered = executor == null || executor instanceof OrderedEventExecutor;// 只有执行线程为EventLoop或者标记为OrderedEventExecutor才是顺序的
     }
 
     @Override
@@ -360,8 +361,10 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            // 使用当前IO线程执行用户自定义处理
             next.invokeChannelRead(m);
         } else {
+            // 使用用户定义的线程执行处理过程
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -374,7 +377,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeChannelRead(Object msg) {
         if (invokeHandler()) {
             try {
-                ((ChannelInboundHandler) handler()).channelRead(this, msg);
+                ((ChannelInboundHandler) handler()).channelRead(this, msg);// 处理器执行用户自定义的处理过程
             } catch (Throwable t) {
                 notifyHandlerException(t);
             }
@@ -904,10 +907,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return false;
     }
 
+    // 向后查找,如果 ChannelHandlerContext 为 inbound 的类型就返回
     private AbstractChannelHandlerContext findContextInbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         do {
-            ctx = ctx.next;
+            ctx = ctx.next;// 入站事件向后查找
         } while ((ctx.executionMask & mask) == 0);
         return ctx;
     }
@@ -979,7 +983,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      */
     private boolean invokeHandler() {
         // Store in local variable to reduce volatile reads.
-        int handlerState = this.handlerState;
+        int handlerState = this.handlerState;// handlerState为volatile变量，存储为本地变量，以便减少volatile读
         return handlerState == ADD_COMPLETE || (!ordered && handlerState == ADD_PENDING);
     }
 
