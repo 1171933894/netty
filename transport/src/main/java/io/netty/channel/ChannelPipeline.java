@@ -219,6 +219,8 @@ import java.util.NoSuchElementException;
  * ChannelHandler却不是线程安全的，需要自己保证ChannelHandlerd的线程安全。
  *
  * Netty的ChannelPipeline支持运行态动态的添加或者删除ChannelHandler。
+ *
+ * ChannelPipeline并不是直接管理ChannelHandler，而是通过ChannelHandlerContext来间接管理。
  */
 public interface ChannelPipeline
         extends ChannelInboundInvoker, ChannelOutboundInvoker, Iterable<Entry<String, ChannelHandler>> {
