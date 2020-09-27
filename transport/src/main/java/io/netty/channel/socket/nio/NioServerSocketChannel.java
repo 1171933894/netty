@@ -87,6 +87,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
+        // 默认的SelectorProvider实例通过调用它的openServerSocketChannel构造了一个JDK的ServerSocketChannel实例，接着调用另外的重载的构造方法
         super(null, channel, SelectionKey.OP_ACCEPT);
         // 这个 config 对象用于配置这个 NioServerSocketChannel ，用于外部获取参数和配置
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());

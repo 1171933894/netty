@@ -130,6 +130,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     @Override
     void init(Channel channel) {
         // 设置 NioServerSocketChannel 的 TCP 属性
+        /**
+         * init方法将引导过程通过options方法设置的参数导入到NioServerSocketChannel的ChannelConfig中，然后再将初始属性导入到NioServerSocketChannel间接父类DefaultAttributeMap中。
+         */
         setChannelOptions(channel, options0().entrySet().toArray(EMPTY_OPTION_ARRAY), logger);
         setAttributes(channel, attrs0().entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));
 
@@ -147,10 +150,14 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             public void initChannel(final Channel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();
                 ChannelHandler handler = config.handler();
+                // 添加用户自定义的bossGroup的ChannelHandler
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                // 向管道尾部添加一个ServerBootstrapAcceptor实例
+                /**
+                 * 异步添加一个ServerBootstrapAcceptor实例，用于将接收到的客户端连接对应的NioSocketChannel转交给workGroup进行管理
+                 */
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {

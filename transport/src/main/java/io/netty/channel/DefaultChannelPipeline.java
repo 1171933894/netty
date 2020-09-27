@@ -1116,7 +1116,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // holding the lock and so produce a deadlock if handlerAdded(...) will try to add another handler from outside
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
-        while (task != null) {
+        while (task != null) {// 遍历该链表，依次执行回调任务
             task.execute();
             task = task.next;
         }

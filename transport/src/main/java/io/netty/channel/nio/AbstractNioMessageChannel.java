@@ -39,6 +39,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
      * @see AbstractNioChannel#AbstractNioChannel(Channel, SelectableChannel, int)
      */
     protected AbstractNioMessageChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        // ServerSocketChannel不存在父Channel，所以parent为null，只有SocketChannel存在（其parent为ServerSocketChannel实例）
         super(parent, ch, readInterestOp);
     }
 
@@ -72,6 +73,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        // 将数据读到readBuf中，返回读取到的字节数
                         int localRead = doReadMessages(readBuf);
                         if (localRead == 0) {
                             break;
@@ -88,6 +90,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 }
 
                 int size = readBuf.size();
+                // 获取读取到的ByteBuf数量，并通过循环将这些ByteBuf传递给ChannelInboundHandler
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
                     pipeline.fireChannelRead(readBuf.get(i));
@@ -116,7 +119,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 //
                 // See https://github.com/netty/netty/issues/2254
                 if (!readPending && !config.isAutoRead()) {
-                    removeReadOp();
+                    removeReadOp();// 检查这个事件有没有从事件集中去除
                 }
             }
         }

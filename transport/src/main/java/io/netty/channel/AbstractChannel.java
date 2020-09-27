@@ -453,11 +453,11 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         @Override
         public final void register(EventLoop eventLoop, final ChannelPromise promise) {
             ObjectUtil.checkNotNull(eventLoop, "eventLoop");
-            if (isRegistered()) {
+            if (isRegistered()) {// 不允许重复注册或者同一个Channel注册到不同的EventLoop中
                 promise.setFailure(new IllegalStateException("registered to an event loop already"));
                 return;
             }
-            if (!isCompatible(eventLoop)) {
+            if (!isCompatible(eventLoop)) {// 如果不能注册到这种类型的EventLoop中
                 promise.setFailure(
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
@@ -498,7 +498,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 if (!promise.setUncancellable() || !ensureOpen(promise)) {
                     return;
                 }
-                boolean firstRegistration = neverRegistered;
+                boolean firstRegistration = neverRegistered;// 默认为true
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -508,7 +508,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 pipeline.invokeHandlerAddedIfNeeded();
 
                 safeSetSuccess(promise);
-                pipeline.fireChannelRegistered();
+                pipeline.fireChannelRegistered();// 向管道发出Channel注册事件
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
                 if (isActive()) {
