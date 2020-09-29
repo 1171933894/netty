@@ -183,7 +183,7 @@ public interface ChannelFuture extends Future<Void> {// 由上面范型为Void�
     ChannelFuture removeListeners(GenericFutureListener<? extends Future<? super Void>>... listeners);
 
     @Override
-    ChannelFuture sync() throws InterruptedException;
+    ChannelFuture sync() throws InterruptedException;// 同步
 
     @Override
     ChannelFuture syncUninterruptibly();
