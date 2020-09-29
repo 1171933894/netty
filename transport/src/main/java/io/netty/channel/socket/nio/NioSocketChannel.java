@@ -311,20 +311,20 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
             doBind0(localAddress);
         }
 
-        boolean success = false;
+        boolean success = false;// 执行是否成功
         try {
-            // 发起TCP连接
+            // 发起TCP连接，连接远程地址
             boolean connected = SocketUtils.connect(javaChannel(), remoteAddress);
+            // 若未连接完成，则关注连接( OP_CONNECT )事件
             if (!connected) {
                 // 暂时没有连接上，服务端没有返回ACK应答，连接结果不确定，返回false
                 selectionKey().interestOps(SelectionKey.OP_CONNECT);
             }
-            success = true;
+            success = true;// 标记执行是否成功
             return connected;// 成功返回true
         } finally {
             if (!success) {
-                // 如果抛出了IO异常，说明客户端的TCP握手请求直接被REST或者被拒绝
-                // 此时需要关闭客户端连接
+                // 如果抛出了IO异常，说明客户端的TCP握手请求直接被REST或者被拒绝，此时需要关闭客户端连接
                 doClose();
             }
         }

@@ -276,10 +276,10 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
     @SuppressWarnings("unchecked")
     void init(Channel channel) {
         ChannelPipeline p = channel.pipeline();
-        p.addLast(config.handler());
+        p.addLast(config.handler());// 添加处理器到 pipeline 中
 
-        setChannelOptions(channel, options0().entrySet().toArray(EMPTY_OPTION_ARRAY), logger);
-        setAttributes(channel, attrs0().entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));
+        setChannelOptions(channel, options0().entrySet().toArray(EMPTY_OPTION_ARRAY), logger);// 初始化 Channel 的可选项集合
+        setAttributes(channel, attrs0().entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));// 初始化 Channel 的属性集合
     }
 
     @Override
