@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public abstract class AbstractBootstrapConfig<B extends AbstractBootstrap<B, C>, C extends Channel> {
 
-    protected final B bootstrap;
+    protected final B bootstrap;// 对应的启动类对象
 
     protected AbstractBootstrapConfig(B bootstrap) {
         this.bootstrap = ObjectUtil.checkNotNull(bootstrap, "bootstrap");

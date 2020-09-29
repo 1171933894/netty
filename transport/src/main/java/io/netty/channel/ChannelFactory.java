@@ -24,5 +24,5 @@ public interface ChannelFactory<T extends Channel> extends io.netty.bootstrap.Ch
      * Creates a new channel.
      */
     @Override
-    T newChannel();
+    T newChannel();// 创建 Channel 对象
 }
