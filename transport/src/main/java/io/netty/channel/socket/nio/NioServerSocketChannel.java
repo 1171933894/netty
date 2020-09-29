@@ -73,7 +73,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance
      */
     public NioServerSocketChannel() {
-        this(newSocket(DEFAULT_SELECTOR_PROVIDER));
+        this(newSocket(DEFAULT_SELECTOR_PROVIDER));// 静态属性，默认的 SelectorProvider 实现类
     }
 
     /**
