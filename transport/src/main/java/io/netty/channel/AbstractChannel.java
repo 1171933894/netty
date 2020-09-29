@@ -54,7 +54,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     private volatile SocketAddress localAddress;
     private volatile SocketAddress remoteAddress;
     private volatile EventLoop eventLoop;// 当前Channel注册的EventLoop
-    private volatile boolean registered;
+    private volatile boolean registered;// 是否注册
     private boolean closeInitiated;
     private Throwable initialCloseCause;
 
@@ -456,7 +456,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
         @Override
         public final void register(EventLoop eventLoop, final ChannelPromise promise) {
-            ObjectUtil.checkNotNull(eventLoop, "eventLoop");
+            ObjectUtil.checkNotNull(eventLoop, "eventLoop");// 校验传入的 eventLoop 非空
             if (isRegistered()) {// 不允许重复注册或者同一个Channel注册到不同的EventLoop中
                 promise.setFailure(new IllegalStateException("registered to an event loop already"));
                 return;
@@ -502,16 +502,19 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 if (!promise.setUncancellable() || !ensureOpen(promise)) {
                     return;
                 }
-                boolean firstRegistration = neverRegistered;// 默认为true
-                doRegister();
-                neverRegistered = false;
-                registered = true;
+                boolean firstRegistration = neverRegistered;// 记录是否为首次注册，默认为true
+                doRegister();// 重要：执行注册逻辑
+                neverRegistered = false;// 标记首次注册为 false
+                registered = true;// 标记 Channel 为已注册
 
                 // Ensure we call handlerAdded(...) before we actually notify the promise. This is needed as the
                 // user may already fire events through the pipeline in the ChannelFutureListener.
+                /**
+                 * 触发 ChannelInitializer 执行，进行 Handler 初始化
+                 */
                 pipeline.invokeHandlerAddedIfNeeded();
 
-                safeSetSuccess(promise);
+                safeSetSuccess(promise);// 回调通知 `promise` 执行成功
                 pipeline.fireChannelRegistered();// 向管道发出Channel注册事件
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.

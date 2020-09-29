@@ -45,9 +45,21 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServerBootstrap.class);
 
+    /**
+     * 子 Channel 的可选项集合
+     */
     private final Map<ChannelOption<?>, Object> childOptions = new ConcurrentHashMap<ChannelOption<?>, Object>();
+    /**
+     * 子 Channel 的属性集合
+     */
     private final Map<AttributeKey<?>, Object> childAttrs = new ConcurrentHashMap<AttributeKey<?>, Object>();
+    /**
+     * 启动类配置对象
+     */
     private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
+    /**
+     * 子 Channel 的 EventLoopGroup 对象
+     */
     private volatile EventLoopGroup childGroup;
     /**
      * NioServerSocketChannel使用，所有连接该监听端口的客户端都会执行它
@@ -69,6 +81,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      */
     @Override
     // 设置ServerBootstrap要用的EventLoopGroup。这个EventLoopGroup将用于ServerChannel和被接收的子Channel的I/O处理
+    /**
+     * 当只传入一个 EventLoopGroup 对象时，即调用的是 #group(EventLoopGroup group) 时，group 和 childGroup 使用同一个。一般情况下，我们不使用这个方法
+     */
     public ServerBootstrap group(EventLoopGroup group) {
         return group(group, group);
     }
@@ -138,13 +153,14 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
         ChannelPipeline p = channel.pipeline();
 
+        // 记录当前的属性
         final EventLoopGroup currentChildGroup = childGroup;
         final ChannelHandler currentChildHandler = childHandler;
         final Entry<ChannelOption<?>, Object>[] currentChildOptions =
                 childOptions.entrySet().toArray(EMPTY_OPTION_ARRAY);
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = childAttrs.entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY);
 
-        // 对 NioServerSocketChannel 的 ChannelPipeline 添加 ChannelInitializer 处理器
+        // 添加 ChannelInitializer 对象到 pipeline 中，用于后续初始化 ChannelHandler 到 pipeline 中
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) {

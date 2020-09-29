@@ -441,6 +441,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return Collections.unmodifiableMap(new HashMap<K, V>(map));
     }
 
+    // 初始化 Channel 的属性集合
     static void setAttributes(Channel channel, Map.Entry<AttributeKey<?>, Object>[] attrs) {
         for (Map.Entry<AttributeKey<?>, Object> e: attrs) {
             @SuppressWarnings("unchecked")
@@ -449,6 +450,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
     }
 
+    // 初始化 Channel 的可选项集合
     static void setChannelOptions(
             Channel channel, Map.Entry<ChannelOption<?>, Object>[] options, InternalLogger logger) {
         for (Map.Entry<ChannelOption<?>, Object> e: options) {

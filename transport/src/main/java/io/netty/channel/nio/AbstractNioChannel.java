@@ -391,7 +391,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
                 // 通知时可以从SelectionKey中重新获取之前的附件进行处理，此处将AbstractNioChannel的实现子类自身
                 // 当作附件注册。如果注册Channel成功，则返回selectionKey，通过selectionKey可以从多路复用器中
                 // 获取Channel对象。
-                selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
+                selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);// 重要：每个 NioEventLoop 对象上，都独有一个 Selector 对象
                 return;
             } catch (CancelledKeyException e) {
                 if (!selected) {
