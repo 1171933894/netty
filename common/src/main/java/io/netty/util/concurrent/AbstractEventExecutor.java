@@ -37,7 +37,8 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
     static final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
     static final long DEFAULT_SHUTDOWN_TIMEOUT = 15;
 
-    private final EventExecutorGroup parent;
+    private final EventExecutorGroup parent;// 所属 EventExecutorGroup
+    // EventExecutor 数组。只包含自己，用于 {@link #iterator()}
     private final Collection<EventExecutor> selfCollection = Collections.<EventExecutor>singleton(this);
 
     protected AbstractEventExecutor() {
@@ -48,16 +49,19 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
         this.parent = parent;
     }
 
+    // 获得所属 EventExecutorGroup
     @Override
     public EventExecutorGroup parent() {
         return parent;
     }
 
+    // 获得自己
     @Override
     public EventExecutor next() {
         return this;
     }
 
+    // 判断当前线程是否在 EventLoop 线程中
     @Override
     public boolean inEventLoop() {
         return inEventLoop(Thread.currentThread());
@@ -159,6 +163,7 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
     /**
      * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
      */
+    //  静态方法，安全的执行任务（所谓“安全”指的是，当任务执行发生异常时，仅仅打印告警日志）
     protected static void safeExecute(Runnable task) {
         try {
             task.run();

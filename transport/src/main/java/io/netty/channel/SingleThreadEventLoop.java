@@ -30,12 +30,14 @@ import java.util.concurrent.ThreadFactory;
  * Abstract base class for {@link EventLoop}s that execute all its submitted tasks in a single thread.
  *
  */
+// 实现 EventLoop 接口，继承 SingleThreadEventExecutor 抽象类，基于单线程的 EventLoop 抽象类，主要增加了 Channel 注册到 EventLoop 上
 public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor implements EventLoop {
 
+    // 默认任务队列最大数量
     protected static final int DEFAULT_MAX_PENDING_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventLoop.maxPendingTasks", Integer.MAX_VALUE));
     // 是一个MpscUnboundedArrayQueue实例。用于存储当前或下一次事件循环(eventloop)迭代结束后需要执行的任务。
-    private final Queue<Runnable> tailTasks;
+    private final Queue<Runnable> tailTasks;// 尾部任务队列，执行在 {@link #taskQueue} 之后
 
     protected SingleThreadEventLoop(EventLoopGroup parent, ThreadFactory threadFactory, boolean addTaskWakesUp) {
         this(parent, threadFactory, addTaskWakesUp, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.reject());
@@ -68,11 +70,11 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     @Override
     public EventLoopGroup parent() {
-        return (EventLoopGroup) super.parent();
+        return (EventLoopGroup) super.parent();// 获得所属 EventLoopGroup
     }
 
     @Override
-    public EventLoop next() {
+    public EventLoop next() {// 获得自己
         return (EventLoop) super.next();
     }
 
@@ -84,8 +86,9 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     @Override
     public ChannelFuture register(final ChannelPromise promise) {
         ObjectUtil.checkNotNull(promise, "promise");
+        // 注册 Channel 到 EventLoop 上
         promise.channel().unsafe().register(this, promise);
-        return promise;
+        return promise;// 返回 ChannelPromise 对象
     }
 
     @Deprecated
@@ -105,14 +108,17 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     @UnstableApi
     public final void executeAfterEventLoopIteration(Runnable task) {
         ObjectUtil.checkNotNull(task, "task");
+        // 关闭时，拒绝任务
         if (isShutdown()) {
             reject();
         }
 
+        // 添加到任务队列
         if (!tailTasks.offer(task)) {
             reject(task);
         }
 
+        // 唤醒线程
         if (!(task instanceof LazyRunnable) && wakesUpForTask(task)) {
             wakeup(inEventLoop());
         }
@@ -135,12 +141,13 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         runAllTasksFrom(tailTasks);
     }
 
-    // 用于判断taskQueue或tailTasks中是否有任务
+    // 用于判断taskQueue或tailTasks中是否有任务（基于两个队列来判断是否还有任务）
     @Override
     protected boolean hasTasks() {
         return super.hasTasks() || !tailTasks.isEmpty();
     }
 
+    // 获得待执行的任务数量
     @Override
     public int pendingTasks() {
         return super.pendingTasks() + tailTasks.size();

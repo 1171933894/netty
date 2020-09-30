@@ -70,22 +70,44 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
     };
 
+    // {@link #state} 字段的原子更新器
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
+    // {@link #thread} 字段的原子更新器
     private static final AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
     // 用于存储任务的队列，是一个MpscUnboundedArrayQueue实例。
+    /**
+     * addTaskWakesUp 属性，添加任务到 taskQueue 队列时，是否唤醒 thread 线程。
+     * maxPendingTasks 属性，最大等待执行任务数量，即 taskQueue 队列大小。
+     * rejectedExecutionHandler 属性，拒绝执行处理器。在 taskQueue 队列超过最大任务数量时，怎么拒绝处理新提交的任务。
+     */
     private final Queue<Runnable> taskQueue;
 
     // 驱动Executor运行的线程
+    /**
+     * 在 SingleThreadEventExecutor 中，任务是提交到 taskQueue 队列中，而执行在 thread 线程中。
+     *
+     * threadProperties 属性，线程属性。
+     * executor 属性，执行器。通过它创建 thread 线程。
+     * interrupted 属性，线程是否打断。详细解析。
+     * lastExecutionTime 属性，最后执行时间。
+     * state 属性，线程状态。SingleThreadEventExecutor 在实现上，thread 的初始化采用延迟启动的方式，只有在第一个任务时，executor 才会执行并创建该线程，从而节省资源。目前 thread 线程有 5 种状态，代码如下
+         * private static final int ST_NOT_STARTED = 1; // 未开始
+         * private static final int ST_STARTED = 2; // 已开始
+         * private static final int ST_SHUTTING_DOWN = 3; // 正在关闭中
+         * private static final int ST_SHUTDOWN = 4; // 已关闭
+         * private static final int ST_TERMINATED = 5; // 已经终止
+     */
     private volatile Thread thread;
+    // 线程属性
     @SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
     // 这个executor充当线程工厂的角色
     private final Executor executor;
-    // interrupted标记
+    // interrupted标记（线程是否已经打断）
     private volatile boolean interrupted;
 
     private final CountDownLatch threadLock = new CountDownLatch(1);
@@ -202,6 +224,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * calls on the this {@link Queue} it may make sense to {@code @Override} this and return some more performant
      * implementation that does not support blocking operations at all.
      */
+    /**
+     * 这个方法默认返回的是 LinkedBlockingQueue 阻塞队列。如果子类有更好的队列选择( 例如非阻塞队列 )，可以重写该方法。在下文，我们会看到它的子类 NioEventLoop ，就重写了这个方法
+     */
     protected Queue<Runnable> newTaskQueue(int maxPendingTasks) {
         return new LinkedBlockingQueue<Runnable>(maxPendingTasks);
     }
@@ -211,8 +236,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      */
     protected void interruptThread() {
         Thread currentThread = thread;
+        // 线程不存在，则标记线程被打断
         if (currentThread == null) {
             interrupted = true;
+        // 打断线程
         } else {
             currentThread.interrupt();
         }
@@ -332,12 +359,14 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      */
     protected Runnable peekTask() {
         assert inEventLoop();
+        // 返回队头的任务，但是不移除
         return taskQueue.peek();
     }
 
     /**
      * @see Queue#isEmpty()
      */
+    // 队列中是否有任务
     protected boolean hasTasks() {
         assert inEventLoop();
         return !taskQueue.isEmpty();
@@ -349,6 +378,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * <strong>Be aware that this operation may be expensive as it depends on the internal implementation of the
      * SingleThreadEventExecutor. So use it with care!</strong>
      */
+    // 获得队列中的任务数
     public int pendingTasks() {
         return taskQueue.size();
     }
@@ -359,15 +389,20 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      */
     protected void addTask(Runnable task) {
         ObjectUtil.checkNotNull(task, "task");
+        // 添加任务到队列
         if (!offerTask(task)) {
+            // 添加失败，则拒绝任务
             reject(task);
         }
     }
 
+    // 添加任务到队列中。若添加失败，则返回 false
     final boolean offerTask(Runnable task) {
+        // 关闭时，拒绝任务
         if (isShutdown()) {
             reject();
         }
+        // 注意，即使对于 BlockingQueue 的 #offer(E e) 方法，也不是阻塞的
         return taskQueue.offer(task);
     }
 
@@ -435,6 +470,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      *
      * @return {@code true} if at least one task was executed.
      */
+    // 调用 #runAllTasksFrom(queue) 方法，执行 tailTasks 队列中的所有任务
     protected final boolean runAllTasksFrom(Queue<Runnable> taskQueue) {
         Runnable task = pollTaskFrom(taskQueue);
         if (task == null) {
@@ -560,6 +596,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * Do nothing, sub-classes may override
      */
+    // 清理释放资源
     protected void cleanup() {
         // NOOP
     }
@@ -572,6 +609,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
     }
 
+    // 判断指定线程是否是 EventLoop 线程
     @Override
     public boolean inEventLoop(Thread thread) {
         return thread == this.thread;
@@ -840,10 +878,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     private void execute(Runnable task, boolean immediate) {
+        // 获得当前是否在 EventLoop 的线程中
         boolean inEventLoop = inEventLoop();
+        // 添加到任务队列
         addTask(task);
         if (!inEventLoop) {
-            startThread();
+            startThread();// 创建线程
+            // 若已经关闭，移除任务，并进行拒绝
             if (isShutdown()) {
                 boolean reject = false;
                 try {
@@ -861,6 +902,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             }
         }
 
+        // 唤醒线程
         if (!addTaskWakesUp && immediate) {
             wakeup(inEventLoop);
         }
@@ -893,6 +935,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return super.invokeAll(tasks, timeout, unit);
     }
 
+    // 判断若在 EventLoop 的线程中调用该方法，抛出 RejectedExecutionException 异常
     private void throwIfInEventLoop(String method) {
         if (inEventLoop()) {
             throw new RejectedExecutionException("Calling " + method + " from within the EventLoop is not allowed");
@@ -910,12 +953,16 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             Thread thread = this.thread;
             if (thread == null) {
                 assert !inEventLoop();
+                // 提交空任务，促使 execute 方法执行
                 submit(NOOP_TASK).syncUninterruptibly();
+                // 获得线程
                 thread = this.thread;
                 assert thread != null;
             }
 
+            // 创建 DefaultThreadProperties 对象
             threadProperties = new DefaultThreadProperties(thread);
+            // CAS 修改 threadProperties 属性
             if (!PROPERTIES_UPDATER.compareAndSet(this, null, threadProperties)) {
                 threadProperties = this.threadProperties;
             }
@@ -927,6 +974,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * @deprecated use {@link AbstractEventExecutor.LazyRunnable}
      */
+    // 实现 Runnable 接口，用于标记不唤醒线程的任务
     @Deprecated
     protected interface NonWakeupRunnable extends LazyRunnable { }
 
@@ -994,20 +1042,25 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                // 记录当前线程
                 thread = Thread.currentThread();
+                // 如果当前线程已经被标记打断，则进行打断操作。
                 if (interrupted) {
                     thread.interrupt();
                 }
 
-                boolean success = false;
+                boolean success = false;// 是否执行成功
+                // 更新最后执行时间
                 updateLastExecutionTime();
                 try {
+                    // 执行任务
                     SingleThreadEventExecutor.this.run();
-                    success = true;
+                    success = true;// 标记执行成功
                 } catch (Throwable t) {
                     logger.warn("Unexpected exception from an event executor: ", t);
                 } finally {
                     for (;;) {
+                        // EventLoop 优雅关闭
                         int oldState = state;
                         if (oldState >= ST_SHUTTING_DOWN || STATE_UPDATER.compareAndSet(
                                 SingleThreadEventExecutor.this, oldState, ST_SHUTTING_DOWN)) {
@@ -1088,6 +1141,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return numTasks;
     }
 
+    /**
+     * 我们可以看到，每个实现方法，实际上就是对被包装的线程 t 的方法的封装。
+     * 那为什么 #threadProperties() 方法不直接返回 thread 呢？因为如果直接返回 thread ，调用方可以调用到该变量的其他方法，这个是我们不希望看到的。
+     */
     private static final class DefaultThreadProperties implements ThreadProperties {
         private final Thread t;
 

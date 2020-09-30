@@ -68,9 +68,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private static final int CLEANUP_INTERVAL = 256; // XXX Hard-coded value, but won't need customization.
 
+    // 是否禁用 SelectionKey 的优化，默认开启
     private static final boolean DISABLE_KEY_SET_OPTIMIZATION =
             SystemPropertyUtil.getBoolean("io.netty.noKeySetOptimization", false);
-
+    // 少于该 N 值，不开启空轮询重建新的 Selector 对象的功能
     private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;// 用于标识Selector空轮询的阈值，当超过这个阈值的话则需要重构Selector
 
@@ -91,6 +92,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     // - http://bugs.sun.com/view_bug.do?bug_id=6427854
     // - https://github.com/netty/netty/issues/203
     static {
+        // 解决 Selector#open() 方法
         final String key = "sun.nio.ch.bugLevel";
         final String bugLevel = SystemPropertyUtil.get(key);
         if (bugLevel == null) {
@@ -126,11 +128,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     /**
      * The NIO {@link Selector}.
      */
-    private Selector selector;
-    private Selector unwrappedSelector;
-    private SelectedSelectionKeySet selectedKeys;
+    private Selector selector;// 包装的 Selector 对象，经过优化
+    private Selector unwrappedSelector;// 未包装的 Selector 对象
+    private SelectedSelectionKeySet selectedKeys;// 注册的 SelectionKey 集合。Netty 自己实现，经过优化。
 
-    private final SelectorProvider provider;
+    private final SelectorProvider provider;// SelectorProvider 对象，用于创建 Selector 对象
 
     private static final long AWAKE = -1L;
     private static final long NONE = Long.MAX_VALUE;
@@ -141,14 +143,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     //    other value T    when EL is waiting with wakeup scheduled at time T
     private final AtomicLong nextWakeupNanos = new AtomicLong(AWAKE);
 
-    private final SelectStrategy selectStrategy;
+    private final SelectStrategy selectStrategy;// Select 策略
 
     // 在事件循环中期待用于处理I/O操作时间的百分比。默认为50%。
     // 也就是说，在事件循环中默认情况下用于处理I/O操作的时间和用于处理任务的时间百分比都为50%，
     // 即，用于处理I/O操作的时间和用于处理任务的时间时一样的。用户可以根据实际情况来修改这个比率。
-    private volatile int ioRatio = 50;
-    private int cancelledKeys;
-    private boolean needsToSelectAgain;
+    private volatile int ioRatio = 50;// 处理 Channel 的就绪的 IO 事件，占处理任务的总时间的比例
+    private int cancelledKeys;// 取消 SelectionKey 的数量
+    private boolean needsToSelectAgain;// 是否需要再次 select Selector 对象
 
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,
@@ -157,6 +159,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 rejectedExecutionHandler);
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "selectStrategy");
+        // 创建 Selector 对象
         final SelectorTuple selectorTuple = openSelector();
         this.selector = selectorTuple.selector;
         this.unwrappedSelector = selectorTuple.unwrappedSelector;
@@ -452,7 +455,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     @Override
     protected void run() {
         int selectCnt = 0;
-        for (;;) {
+        for (;;) {// “死”循环，直到 NioEventLoop 关闭
             try {
                 int strategy;
                 try {
@@ -463,7 +466,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                      */
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
-                    case SelectStrategy.CONTINUE:
+                    case SelectStrategy.CONTINUE:// 默认实现下，不存在这个情况
                         continue;
 
                     case SelectStrategy.BUSY_WAIT:
@@ -501,20 +504,24 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 needsToSelectAgain = false;
                 final int ioRatio = this.ioRatio;
                 boolean ranTasks;
+                // ioRatio 为 100 ，则不考虑时间占比的分配
                 if (ioRatio == 100) {
                     try {
-                        if (strategy > 0) {
+                        if (strategy > 0) {// 处理 Channel 感兴趣的就绪 IO 事件
                             processSelectedKeys();
                         }
                     } finally {
+                        // 运行所有普通任务和定时任务，不限制时间
                         // Ensure we always run tasks.
                         ranTasks = runAllTasks();
                     }
-                } else if (strategy > 0) {
+                } else if (strategy > 0) {// ioRatio 为 < 100 ，则考虑时间占比的分配
                     final long ioStartTime = System.nanoTime();
                     try {
+                        // 处理 Channel 感兴趣的就绪 IO 事件
                         processSelectedKeys();
                     } finally {
+                        // 运行所有普通任务和定时任务，限制时间
                         // Ensure we always run tasks.
                         final long ioTime = System.nanoTime() - ioStartTime;
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
@@ -794,6 +801,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /**
+     * NioEventLoop 的线程阻塞，主要是调用 Selector#select(long timeout) 方法，阻塞等待有 Channel 感兴趣的 IO 事件，或者超时。所以需要调用 Selector#wakeup() 方法，进行唤醒 Selector 。
+     * Selector#wakeup() 方法的唤醒操作是开销比较大的操作，并且每次重复调用相当于重复唤醒。所以，通过 wakenUp 属性，通过 CAS 修改 false => true ，保证有且仅有进行一次唤醒。
+     */
     @Override
     protected void wakeup(boolean inEventLoop) {
         if (!inEventLoop && nextWakeupNanos.getAndSet(AWAKE) != AWAKE) {
