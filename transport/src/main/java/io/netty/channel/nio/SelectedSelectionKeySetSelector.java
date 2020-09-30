@@ -21,9 +21,13 @@ import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
 
+/**
+ * select 相关的 3 个方法，在调用对应的 Java NIO Selector 方法之前，会调用 SelectedSelectionKeySet#reset() 方法，重置 selectionKeys 。
+ * 从而实现，每次 select 之后，都是新的已 select 的 NIO SelectionKey 集合。
+ */
 final class SelectedSelectionKeySetSelector extends Selector {
-    private final SelectedSelectionKeySet selectionKeys;
-    private final Selector delegate;
+    private final SelectedSelectionKeySet selectionKeys;// SelectedSelectionKeySet 对象
+    private final Selector delegate;// 原始 Java NIO Selector 对象
 
     SelectedSelectionKeySetSelector(Selector delegate, SelectedSelectionKeySet selectionKeys) {
         this.delegate = delegate;
@@ -52,7 +56,7 @@ final class SelectedSelectionKeySetSelector extends Selector {
 
     @Override
     public int selectNow() throws IOException {
-        selectionKeys.reset();
+        selectionKeys.reset();// 重置 selectionKeys
         return delegate.selectNow();
     }
 
