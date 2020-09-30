@@ -33,7 +33,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     private final EventExecutor[] children;// Group所包含的EventExecutor数组
     private final Set<EventExecutor> readonlyChildren;// children的只读外观集合
     private final AtomicInteger terminatedChildren = new AtomicInteger();// 已经关闭child EventExecutor
-    private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);// 一个标记Group关闭状态的Futuire
+    private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);// 用于终止 EventExecutor 的异步 Future
     private final EventExecutorChooserFactory.EventExecutorChooser chooser;// 选择child EventExecutor的选择器对象，用来实现EventExecutorGroup.next()方法
 
     /**
@@ -89,6 +89,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
+                // 创建失败，抛出 IllegalStateException 异常
                 // TODO: Think about if this is a good exception type
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
@@ -98,6 +99,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                         children[j].shutdownGracefully();
                     }
 
+                    // 确保所有已创建的 EventExecutor 已关闭
                     for (int j = 0; j < i; j ++) {
                         EventExecutor e = children[j];
                         try {
@@ -117,7 +119,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         //初始化EventExecutor选择器，默认的选择逻辑其实很简单，就是轮询
         chooser = chooserFactory.newChooser(children);
 
-        // 监听每个EventExecutor的关闭状态，所有EventExecutor都关闭了，Group也就关闭了
+        // 创建监听器，用于 EventExecutor 终止时的监听
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
@@ -126,12 +128,12 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 }
             }
         };
-
-        for (EventExecutor e: children) {// 每个都添加添加一个监听，用于处理完成事件
+        // 设置监听器到每个 EventExecutor 上
+        for (EventExecutor e: children) {
             e.terminationFuture().addListener(terminationListener);
         }
 
-        // 这里搞一个只读的EventLoop集合
+        // 创建不可变( 只读 )的 EventExecutor 数组
         Set<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
@@ -156,6 +158,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * Return the number of {@link EventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
      */
+    // 获得 EventExecutor 数组的大小
     public final int executorCount() {
         return children.length;
     }

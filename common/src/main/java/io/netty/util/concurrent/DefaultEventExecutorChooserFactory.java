@@ -32,7 +32,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @SuppressWarnings("unchecked")
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
-        if (isPowerOfTwo(executors.length)) {
+        if (isPowerOfTwo(executors.length)) {// 是否为 2 的幂次方
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
             return new GenericEventExecutorChooser(executors);
@@ -44,8 +44,8 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     }
 
     private static final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {
-        private final AtomicInteger idx = new AtomicInteger();
-        private final EventExecutor[] executors;
+        private final AtomicInteger idx = new AtomicInteger();// 自增序列
+        private final EventExecutor[] executors;// EventExecutor 数组
 
         PowerOfTwoEventExecutorChooser(EventExecutor[] executors) {
             this.executors = executors;
@@ -57,9 +57,12 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
         }
     }
 
+    /**
+     * 使用 idx 自增，并使用 EventExecutor 数组的大小来取余
+     */
     private static final class GenericEventExecutorChooser implements EventExecutorChooser {
-        private final AtomicInteger idx = new AtomicInteger();
-        private final EventExecutor[] executors;
+        private final AtomicInteger idx = new AtomicInteger();// 自增序列
+        private final EventExecutor[] executors;// EventExecutor 数组
 
         GenericEventExecutorChooser(EventExecutor[] executors) {
             this.executors = executors;

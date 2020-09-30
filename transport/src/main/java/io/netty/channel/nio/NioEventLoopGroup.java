@@ -140,6 +140,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      */
     public void setIoRatio(int ioRatio) {
         for (EventExecutor e: this) {
+            // 设置所有 EventLoop 的 IO 任务占用执行时间的比例
             ((NioEventLoop) e).setIoRatio(ioRatio);
         }
     }
@@ -149,6 +150,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      * around the  infamous epoll 100% CPU bug.
      */
     public void rebuildSelectors() {
+        // 重建所有 EventLoop 的 Selector 对象
         for (EventExecutor e: this) {
             ((NioEventLoop) e).rebuildSelector();
         }

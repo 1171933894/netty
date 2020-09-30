@@ -68,6 +68,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
         super(nThreads == 0 ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, chooserFactory, args);
     }
 
+    // 覆盖父类方法，增加了线程优先级为 Thread.MAX_PRIORITY
     @Override
     protected ThreadFactory newDefaultThreadFactory() {
         return new DefaultThreadFactory(getClass(), Thread.MAX_PRIORITY);
@@ -78,6 +79,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
         return (EventLoop) super.next();
     }
 
+    // 覆盖父类方法，返回值改为 EventLoop 类
     @Override
     protected abstract EventLoop newChild(Executor executor, Object... args) throws Exception;
 
