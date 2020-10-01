@@ -82,7 +82,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * Neither {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
-    private static final int INIT = 0;
+    private static final int INIT = 0;// 初始化
 
     private final DefaultChannelPipeline pipeline;
     private final String name;// Context的名称
@@ -98,7 +98,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     // There is no need to make this volatile as at worse it will just create a few more instances then needed.
     private Tasks invokeTasks;
 
-    private volatile int handlerState = INIT;
+    private volatile int handlerState = INIT;// 处理器状态
 
     AbstractChannelHandlerContext(DefaultChannelPipeline pipeline, EventExecutor executor,
                                   String name, Class<? extends ChannelHandler> handlerClass) {
@@ -933,6 +933,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         handlerState = REMOVE_COMPLETE;
     }
 
+    /**
+     * #setAddComplete() 方法，设置 ChannelHandler 添加完成。完成后，状态有两种结果：1）REMOVE_COMPLETE；2）ADD_COMPLETE
+     */
     final boolean setAddComplete() {
         for (;;) {
             int oldState = handlerState;
