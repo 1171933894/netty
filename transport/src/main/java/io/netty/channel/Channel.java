@@ -74,6 +74,17 @@ import java.net.SocketAddress;
  * resources once you are done with the {@link Channel}. This ensures all resources are
  * released in a proper way, i.e. filehandles.
  */
+/**
+ * 一个正常结束的 Channel 状态转移有两种情况：
+ *
+ * 服务端用于绑定( bind )的 Channel 、或者客户端发起连接( connect )的 Channel 。
+ *
+ * REGISTERED -> CONNECT/BIND -> ACTIVE -> CLOSE -> INACTIVE -> UNREGISTERED
+ * 服务端接受( accept )客户端的 Channel 。
+ *
+ * REGISTERED -> ACTIVE -> CLOSE -> INACTIVE -> UNREGISTERED
+ * 一个异常关闭的 Channel 状态转移不符合上面的。
+ */
 public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparable<Channel> {
 
     /**
@@ -117,6 +128,10 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * Return {@code true} if the {@link Channel} is active and so connected.
      */
     // 判断当前Channel是否已经处于激活状态
+    /**
+     * 对于服务端 ServerSocketChannel ，true 表示 Channel 已经绑定到端口上，可提供服务
+     * 对于客户端 SocketChannel ，true 表示 Channel 连接到远程服务器
+     */
     boolean isActive();
 
     /**
