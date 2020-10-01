@@ -565,8 +565,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
             // Always handle shutdown even if the loop processing threw an exception.
             try {
-                if (isShuttingDown()) {
-                    closeAll();
+                if (isShuttingDown()) {// 检测线程状态
+                    closeAll();// 关闭注册的channel
                     if (confirmShutdown()) {
                         return;
                     }
@@ -619,6 +619,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private void processSelectedKeys() {
         // 当 selectedKeys 非空，意味着使用优化的 SelectedSelectionKeySetSelector
         if (selectedKeys != null) {
+            // 基于 Netty SelectedSelectionKeySetSelector ，处理 Channel 新增就绪的 IO 事件
             processSelectedKeysOptimized();
         } else {
             processSelectedKeysPlain(selector.selectedKeys());
@@ -651,22 +652,24 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             return;
         }
 
+        // 遍历 SelectionKey 迭代器
         Iterator<SelectionKey> i = selectedKeys.iterator();
         for (;;) {
+            // 获得 SelectionKey 对象
             final SelectionKey k = i.next();
             final Object a = k.attachment();
-            i.remove();
-
+            i.remove();// 从迭代器中移除
+            // 处理一个 Channel 就绪的 IO 事件
             if (a instanceof AbstractNioChannel) {
                 processSelectedKey(k, (AbstractNioChannel) a);
-            } else {
+            } else {// 使用 NioTask 处理一个 Channel 就绪的 IO 事件
                 @SuppressWarnings("unchecked")
                 NioTask<SelectableChannel> task = (NioTask<SelectableChannel>) a;
                 processSelectedKey(k, task);
             }
 
             if (!i.hasNext()) {
-                break;
+                break;// 无下一个节点，结束
             }
 
             if (needsToSelectAgain) {
@@ -684,6 +687,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void processSelectedKeysOptimized() {
+        // 遍历数组
         for (int i = 0; i < selectedKeys.size; ++i) {
             final SelectionKey k = selectedKeys.keys[i];
             // null out entry in the array to allow to have it GC'ed once the Channel close
@@ -692,9 +696,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
             final Object a = k.attachment();
 
+            // 处理一个 Channel 就绪的 IO 事件
             if (a instanceof AbstractNioChannel) {
                 processSelectedKey(k, (AbstractNioChannel) a);
-            } else {
+            } else {// 使用 NioTask 处理一个 Channel 就绪的 IO 事件
                 @SuppressWarnings("unchecked")
                 NioTask<SelectableChannel> task = (NioTask<SelectableChannel>) a;
                 processSelectedKey(k, task);
@@ -712,6 +717,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
+        // 如果 SelectionKey 是不合法的，则关闭 Channel
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         if (!k.isValid()) {
             final EventLoop eventLoop;
@@ -735,23 +741,26 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
 
         try {
+            // 获得就绪的 IO 事件的 ops
             int readyOps = k.readyOps();
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
             // the NIO JDK channel implementation may throw a NotYetConnectedException.
-            if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
+            if ((readyOps & SelectionKey.OP_CONNECT) != 0) {// OP_CONNECT 事件就绪
                 // remove OP_CONNECT as otherwise Selector.select(..) will always return without blocking
                 // See https://github.com/netty/netty/issues/924
+                // 移除对 OP_CONNECT 感兴趣
                 int ops = k.interestOps();
                 ops &= ~SelectionKey.OP_CONNECT;
                 k.interestOps(ops);
-
+                // 完成连接
                 unsafe.finishConnect();
             }
 
+            // OP_WRITE 事件就绪
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
-                ch.unsafe().forceFlush();
+                ch.unsafe().forceFlush();// 向 Channel 写入数据
             }
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
@@ -760,26 +769,33 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {
+            // 发生异常，关闭 Channel
             unsafe.close(unsafe.voidPromise());
         }
     }
 
     private static void processSelectedKey(SelectionKey k, NioTask<SelectableChannel> task) {
-        int state = 0;
+        int state = 0;// 未执行
         try {
+            // 调用 NioTask 的 Channel 就绪事件
             task.channelReady(k.channel(), k);
-            state = 1;
+            state = 1;// 执行成功
         } catch (Exception e) {
+            // SelectionKey 取消
             k.cancel();
+            // 执行 Channel 取消注册
             invokeChannelUnregistered(task, k, e);
-            state = 2;
+            state = 2;// 执行异常
         } finally {
             switch (state) {
             case 0:
+                // SelectionKey 取消
                 k.cancel();
+                // 执行 Channel 取消注册
                 invokeChannelUnregistered(task, k, null);
                 break;
             case 1:
+                // SelectionKey 不合法，则执行 Channel 取消注册
                 if (!k.isValid()) { // Cancelled by channelReady()
                     invokeChannelUnregistered(task, k, null);
                 }

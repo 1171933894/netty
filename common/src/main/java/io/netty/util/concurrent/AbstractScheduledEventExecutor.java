@@ -44,6 +44,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
        public void run() { } // Do nothing
     };
 
+    /**
+     * 定时任务队列
+     */
     PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue;
 
     long nextTaskId;
@@ -98,6 +101,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      */
     protected void cancelScheduledTasks() {
         assert inEventLoop();
+        // 若队列为空，直接返回
         PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         if (isNullOrEmpty(scheduledTaskQueue)) {
             return;
@@ -106,6 +110,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         final ScheduledFutureTask<?>[] scheduledTasks =
                 scheduledTaskQueue.toArray(new ScheduledFutureTask<?>[0]);
 
+        // 循环，取消所有任务
         for (ScheduledFutureTask<?> task: scheduledTasks) {
             task.cancelWithoutRemove(false);
         }
@@ -129,9 +134,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
 
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         if (scheduledTask == null || scheduledTask.deadlineNanos() - nanoTime > 0) {
-            return null;
+            return null;// 直接返回，若获取不到
         }
-        scheduledTaskQueue.remove();
+        scheduledTaskQueue.remove();// 移除任务
         scheduledTask.setConsumed();
         return scheduledTask;
     }
@@ -139,6 +144,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     /**
      * Return the nanoseconds until the next scheduled task is ready to be run or {@code -1} if no task is scheduled.
      */
+    // 定时任务队列，距离当前时间，还要多久可执行
     protected final long nextScheduledTaskNano() {
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         return scheduledTask != null ? scheduledTask.delayNanos() : -1;
@@ -155,14 +161,16 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
 
     final ScheduledFutureTask<?> peekScheduledTask() {
         Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
-        return scheduledTaskQueue != null ? scheduledTaskQueue.peek() : null;
+        return scheduledTaskQueue != null ? scheduledTaskQueue.peek() : null;// peek将不会从队列中，移除该任务
     }
 
     /**
      * Returns {@code true} if a scheduled task is ready for processing.
      */
     protected final boolean hasScheduledTasks() {
+        // 获得队列首个定时任务。不会从队列中，移除该任务
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+        // 判断该任务是否到达可执行的时间
         return scheduledTask != null && scheduledTask.deadlineNanos() <= nanoTime();
     }
 
@@ -188,6 +196,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         if (delay < 0) {
             delay = 0;
         }
+        // 无视，已经废弃
         validateScheduled0(delay, unit);
 
         return schedule(new ScheduledFutureTask<V>(this, callable, deadlineNanos(unit.toNanos(delay))));
@@ -254,8 +263,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
 
     private <V> ScheduledFuture<V> schedule(final ScheduledFutureTask<V> task) {
         if (inEventLoop()) {
+            // 添加到定时任务队列
             scheduleFromEventLoop(task);
-        } else {
+        } else {// 直接调用
             final long deadlineNanos = task.deadlineNanos();
             // task will add itself to scheduled task queue when run if not expired
             if (beforeScheduledTaskSubmitted(deadlineNanos)) {
@@ -275,8 +285,10 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     final void removeScheduled(final ScheduledFutureTask<?> task) {
         assert task.isCancelled();
         if (inEventLoop()) {
+            // 移除出定时任务队列
             scheduledTaskQueue().removeTyped(task);
         } else {
+            // 通过 EventLoop 的线程，移除出定时任务队列
             // task will remove itself from scheduled task queue when it runs
             lazyExecute(task);
         }
