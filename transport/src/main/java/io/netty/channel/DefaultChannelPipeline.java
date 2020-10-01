@@ -1430,8 +1430,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
+            // 传播 Channel active 事件给下一个 Inbound 节点
             ctx.fireChannelActive();
-
+            // 执行 read 逻辑
             readIfIsAutoRead();
         }
 
