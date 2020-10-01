@@ -39,10 +39,11 @@ import io.netty.util.internal.TypeParameterMatcher;
  * {@link ReferenceCountUtil#release(Object)}. In this case you may need to use
  * {@link ReferenceCountUtil#retain(Object)} if you pass the object to the next handler in the {@link ChannelPipeline}.
  */
+// 实现对指定类型的消息的自定义处理
 public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandlerAdapter {
 
-    private final TypeParameterMatcher matcher;
-    private final boolean autoRelease;
+    private final TypeParameterMatcher matcher;// 类型匹配器（用来匹配泛型类型）
+    private final boolean autoRelease;// 使用完消息，是否自动释放
 
     /**
      * see {@link #SimpleChannelInboundHandler(boolean)} with {@code true} as boolean parameter.
@@ -58,6 +59,7 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
      *                      {@link ReferenceCountUtil#release(Object)}.
      */
     protected SimpleChannelInboundHandler(boolean autoRelease) {
+        // matcher
         matcher = TypeParameterMatcher.find(this, SimpleChannelInboundHandler.class, "I");
         this.autoRelease = autoRelease;
     }
@@ -86,22 +88,25 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
      * {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
      */
     public boolean acceptInboundMessage(Object msg) throws Exception {
-        return matcher.match(msg);
+        return matcher.match(msg);// 判断消息是否匹配
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        // 是否要释放消息
         boolean release = true;
         try {
+            // 判断是否为匹配的消息
             if (acceptInboundMessage(msg)) {
                 @SuppressWarnings("unchecked")
                 I imsg = (I) msg;
-                channelRead0(ctx, imsg);
+                channelRead0(ctx, imsg);// 处理消息
             } else {
-                release = false;
-                ctx.fireChannelRead(msg);
+                release = false;// 不需要释放消息
+                ctx.fireChannelRead(msg);// 触发 Channel Read 到下一个节点
             }
         } finally {
+            // 判断，是否要释放消息
             if (autoRelease && release) {
                 ReferenceCountUtil.release(msg);
             }
