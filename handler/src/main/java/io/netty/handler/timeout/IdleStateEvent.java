@@ -23,14 +23,17 @@ import io.netty.util.internal.StringUtil;
  * A user event triggered by {@link IdleStateHandler} when a {@link Channel} is idle.
  */
 public class IdleStateEvent {
+    // READ
     public static final IdleStateEvent FIRST_READER_IDLE_STATE_EVENT =
             new DefaultIdleStateEvent(IdleState.READER_IDLE, true);
     public static final IdleStateEvent READER_IDLE_STATE_EVENT =
             new DefaultIdleStateEvent(IdleState.READER_IDLE, false);
+    // WRITE
     public static final IdleStateEvent FIRST_WRITER_IDLE_STATE_EVENT =
             new DefaultIdleStateEvent(IdleState.WRITER_IDLE, true);
     public static final IdleStateEvent WRITER_IDLE_STATE_EVENT =
             new DefaultIdleStateEvent(IdleState.WRITER_IDLE, false);
+    // ALL
     public static final IdleStateEvent FIRST_ALL_IDLE_STATE_EVENT =
             new DefaultIdleStateEvent(IdleState.ALL_IDLE, true);
     public static final IdleStateEvent ALL_IDLE_STATE_EVENT =
@@ -53,6 +56,7 @@ public class IdleStateEvent {
     /**
      * Returns the idle state.
      */
+    // 空闲状态类型
     public IdleState state() {
         return state;
     }
@@ -60,6 +64,7 @@ public class IdleStateEvent {
     /**
      * Returns {@code true} if this was the first event for the {@link IdleState}
      */
+    // 是否首次
     public boolean isFirst() {
         return first;
     }
