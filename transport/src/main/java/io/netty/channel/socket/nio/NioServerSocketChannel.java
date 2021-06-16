@@ -108,6 +108,9 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         return config;
     }
 
+    /**
+     * 判断 ServerSocketChannel 是否绑定端口。此时，一般返回的是 false
+     */
     @Override
     public boolean isActive() {
         // As java.nio.ServerSocketChannel.isBound() will continue to return true even after the channel was closed
@@ -130,6 +133,9 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         return SocketUtils.localSocketAddress(javaChannel().socket());
     }
 
+    /**
+     * 绑定 Channel 的端口
+     */
     @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     @Override
     protected void doBind(SocketAddress localAddress) throws Exception {

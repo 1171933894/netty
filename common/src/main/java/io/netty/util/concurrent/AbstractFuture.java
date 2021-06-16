@@ -32,7 +32,7 @@ public abstract class AbstractFuture<V> implements Future<V> {
         // 调用awwait()方法进行无限期阻塞，当I/O操作完成后会被nitify()。
         await();
 
-        // 程序被唤醒后继续执行，检查I/O操作是否发生了一场，如果没有异常，
+        // 程序被唤醒后继续执行，检查I/O操作是否发生了异常，如果没有异常，
         // 则通过getNow()方法获取结果并返回。否则，将异常堆栈进行包装，
         // 抛出ExecutionExcepton。
         Throwable cause = cause();

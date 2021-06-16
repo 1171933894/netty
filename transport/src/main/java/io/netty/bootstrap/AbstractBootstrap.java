@@ -62,9 +62,15 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     static final Map.Entry<AttributeKey<?>, Object>[] EMPTY_ATTRIBUTE_ARRAY = new Map.Entry[0];
 
     volatile EventLoopGroup group;// EventLoopGroup 对象
+    /**
+     * Channel 工厂，用于创建 Channel 对象
+     */
     @SuppressWarnings("deprecation")
-    private volatile ChannelFactory<? extends C> channelFactory;// Channel 工厂，用于创建 Channel 对象。
-    private volatile SocketAddress localAddress;// 本地地址
+    private volatile ChannelFactory<? extends C> channelFactory;
+    /**
+     * 本地地址
+     */
+    private volatile SocketAddress localAddress;
     private final Map<ChannelOption<?>, Object> options = new ConcurrentHashMap<ChannelOption<?>, Object>();// 可选项集合
     private final Map<AttributeKey<?>, Object> attrs = new ConcurrentHashMap<AttributeKey<?>, Object>();// 属性集合
     /**
@@ -99,6 +105,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return self();
     }
 
+    /**
+     * 实现“链式调用”的基础
+     */
     @SuppressWarnings("unchecked")
     private B self() {
         return (B) this;
@@ -289,6 +298,10 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
          * 进行回调执行 #doBind0(...) 方法的逻辑
          */
 
+        /**
+         * 这里很好的处理了完成和未完成的情况
+         */
+
         // 绑定 Channel 的端口，并注册 Channel 到 SelectionKey 中
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
@@ -338,6 +351,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
 
         // 注册 Channel 到 EventLoopGroup 中
+        /**
+         * 实际在方法内部，EventLoopGroup 会分配一个 EventLoop 对象，将 Channel 注册到其上
+         */
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {

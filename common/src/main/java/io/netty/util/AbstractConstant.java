@@ -25,7 +25,7 @@ public abstract class AbstractConstant<T extends AbstractConstant<T>> implements
     private static final AtomicLong uniqueIdGenerator = new AtomicLong();
     private final int id;
     private final String name;
-    private final long uniquifier;
+    private final long uniquifier;// 唯一标识符
 
     /**
      * Creates a new instance.

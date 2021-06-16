@@ -56,6 +56,7 @@ import static io.netty.channel.internal.ChannelUtils.MAX_BYTES_PER_GATHERING_WRI
  */
 public class NioSocketChannel extends AbstractNioByteChannel implements io.netty.channel.socket.SocketChannel {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioSocketChannel.class);
+    // 静态属性，默认的 SelectorProvider 实现类
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
     private static SocketChannel newSocket(SelectorProvider provider) {
@@ -296,6 +297,9 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
         doBind0(localAddress);
     }
 
+    /**
+     * 一般情况下，NIO Client 是不需要绑定本地地址的。默认情况下，系统会随机分配一个可用的本地地址，进行绑定
+     */
     private void doBind0(SocketAddress localAddress) throws Exception {
         if (PlatformDependent.javaVersion() >= 7) {
             SocketUtils.bind(javaChannel(), localAddress);
