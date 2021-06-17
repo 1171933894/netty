@@ -514,6 +514,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     continue;
                 }
 
+                // TODO 1007 NioEventLoop cancel 方法
                 selectCnt++;
                 cancelledKeys = 0;
                 needsToSelectAgain = false;

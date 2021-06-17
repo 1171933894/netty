@@ -78,6 +78,11 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         return (EventLoop) super.next();
     }
 
+    /**
+     * 注册 Channel 到 EventLoop 上
+     * 将 Channel 和 EventLoop 创建一个 DefaultChannelPromise 对象。
+     * 通过这个 DefaultChannelPromise 对象，我们就能实现对异步注册过程的监听
+     */
     @Override
     public ChannelFuture register(Channel channel) {
         return register(new DefaultChannelPromise(channel, this));
