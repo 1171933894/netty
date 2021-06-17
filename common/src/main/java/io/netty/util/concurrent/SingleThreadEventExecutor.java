@@ -487,7 +487,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             return false;
         }
         for (;;) {
-            // 执行任务
+            // 执行任务（包住异常）
             safeExecute(task);
             // 获得队头的任务
             task = pollTaskFrom(taskQueue);
