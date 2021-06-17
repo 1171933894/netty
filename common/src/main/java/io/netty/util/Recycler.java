@@ -37,6 +37,10 @@ import static java.lang.Math.min;
  *
  * @param <T> the type of the pooled object
  */
+
+/**
+ * 其中对应堆内存和直接内存的池化实现分别是PooledHeapByteBuf和PooledDirectByteBuf
+ */
 public abstract class Recycler<T> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Recycler.class);

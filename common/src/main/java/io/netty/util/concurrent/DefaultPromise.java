@@ -37,6 +37,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
     private static final InternalLogger rejectedExecutionLogger =
             InternalLoggerFactory.getInstance(DefaultPromise.class.getName() + ".rejectedExecution");
+    /**
+     * 嵌套的Listener，是指在listener的operationComplete方法中，可以再次使用future.addListener()继续添加listener，Netty限制的最大层数是8
+     */
     private static final int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt("io.netty.defaultPromise.maxListenerStackDepth", 8));
     @SuppressWarnings("rawtypes")
@@ -552,6 +555,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     private void notifyListenersNow() {
         Object listeners;
+        /**
+         * 此时外部线程可能会执行添加Listener操作，所以需要同步
+         */
         synchronized (this) {
             // Only proceed if there are listeners to notify and we are not already notifying listeners.
             if (notifyingListeners || this.listeners == null) {
@@ -602,10 +608,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     private void addListener0(GenericFutureListener<? extends Future<? super V>> listener) {
         if (listeners == null) {
-            listeners = listener;
+            listeners = listener;// 只有一个
         } else if (listeners instanceof DefaultFutureListeners) {
-            ((DefaultFutureListeners) listeners).add(listener);
+            ((DefaultFutureListeners) listeners).add(listener);// 大于两个
         } else {
+            // 从一个扩展为两个
             listeners = new DefaultFutureListeners((GenericFutureListener<?>) listeners, listener);
         }
     }

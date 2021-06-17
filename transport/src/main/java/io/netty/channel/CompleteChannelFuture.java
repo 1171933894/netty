@@ -27,6 +27,7 @@ import io.netty.util.internal.ObjectUtil;
  */
 abstract class CompleteChannelFuture extends CompleteFuture<Void> implements ChannelFuture {
 
+    // 关联的Channel对象
     private final Channel channel;
 
     /**
