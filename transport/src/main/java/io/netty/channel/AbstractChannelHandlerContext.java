@@ -507,13 +507,16 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     private void invokeBind(SocketAddress localAddress, ChannelPromise promise) {
-        if (invokeHandler()) {
+        if (invokeHandler()) {// 判断是否符合的 ChannelHandler
             try {
+                // 调用该 ChannelHandler 的 bind 方法
                 ((ChannelOutboundHandler) handler()).bind(this, localAddress, promise);
             } catch (Throwable t) {
+                // 通知 Outbound 事件的传播，发生异常（也就是说，该异常不会在 pipeline 中传播）
                 notifyOutboundHandlerException(t, promise);
             }
         } else {
+            // 跳过，传播 Outbound 事件给下一个节点
             bind(localAddress, promise);
         }
     }
