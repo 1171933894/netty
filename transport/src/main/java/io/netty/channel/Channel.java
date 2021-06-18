@@ -90,10 +90,16 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
     /**
      * Returns the globally unique identifier of this {@link Channel}.
      */
+    /**
+     * Channel 的编号
+     */
     ChannelId id();
 
     /**
      * Return the {@link EventLoop} this {@link Channel} was registered to.
+     */
+    /**
+     * Channel 注册到的 EventLoop
      */
     EventLoop eventLoop();
 
@@ -181,17 +187,26 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * this method returns {@code false} are queued until the I/O thread is
      * ready to process the queued write requests.
      */
+    /**
+     * 当 Channel 的写缓存区 outbound 非 null 且可写时，返回 true
+     */
     boolean isWritable();
 
     /**
      * Get how many bytes can be written until {@link #isWritable()} returns {@code false}.
      * This quantity will always be non-negative. If {@link #isWritable()} is {@code false} then 0.
      */
+    /**
+     * 获得距离不可写还有多少字节数
+     */
     long bytesBeforeUnwritable();
 
     /**
      * Get how many bytes must be drained from underlying buffers until {@link #isWritable()} returns {@code true}.
      * This quantity will always be non-negative. If {@link #isWritable()} is {@code true} then 0.
+     */
+    /**
+     * 获得距离可写还要多少字节数
      */
     long bytesBeforeWritable();
 
@@ -203,10 +218,16 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
     /**
      * Return the assigned {@link ChannelPipeline}.
      */
+    /**
+     * ChannelPipeline 对象，用于处理 Inbound 和 Outbound 事件的处理
+     */
     ChannelPipeline pipeline();
 
     /**
      * Return the assigned {@link ByteBufAllocator} which will be used to allocate {@link ByteBuf}s.
+     */
+    /**
+     * ByteBuf 分配器
      */
     ByteBufAllocator alloc();
 
