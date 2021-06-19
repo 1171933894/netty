@@ -199,14 +199,18 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     /**
-     * ServerBootstrapAcceptor ，继承 ChannelInboundHandlerAdapter 类，服务器接收器( acceptor )，负责将接收的客户端的 NioSocketChannel 注册到 EventLoop 中
+     * ServerBootstrapAcceptor ，继承 ChannelInboundHandlerAdapter 类，服务器接收器( acceptor )，
+     * 负责将接收的客户端的 NioSocketChannel 注册到 EventLoop 中。可以看出它是 Inbound 事件处理器
      */
     private static class ServerBootstrapAcceptor extends ChannelInboundHandlerAdapter {
-
+        // 记录当前的属性
         private final EventLoopGroup childGroup;
         private final ChannelHandler childHandler;
         private final Entry<ChannelOption<?>, Object>[] childOptions;
         private final Entry<AttributeKey<?>, Object>[] childAttrs;
+        /**
+         * 自动恢复接受客户端连接的任务
+         */
         private final Runnable enableAutoReadTask;
 
         ServerBootstrapAcceptor(
@@ -233,23 +237,30 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            // 接受的客户端的 NioSocketChannel 对象
             final Channel child = (Channel) msg;
 
+            // 添加 NioSocketChannel 的处理器
             child.pipeline().addLast(childHandler);
 
+            // 设置 NioSocketChannel 的配置项
             setChannelOptions(child, childOptions, logger);
+            // 设置 NioSocketChannel 的属性
             setAttributes(child, childAttrs);
 
             try {
+                // 注册客户端的 NioSocketChannel 到 work EventLoop 中。
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
+                        // 注册失败，关闭客户端的 NioSocketChannel
                         if (!future.isSuccess()) {
                             forceClose(child, future.cause());
                         }
                     }
                 });
             } catch (Throwable t) {
+                // 发生异常，强制关闭客户端的 NioSocketChannel
                 forceClose(child, t);
             }
         }
@@ -259,6 +270,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             logger.warn("Failed to register an accepted channel: {}", child, t);
         }
 
+        /**
+         * 当捕获到异常时，暂停 1 秒，不再接受新的客户端连接；而后，再恢复接受新的客户端连接
+         */
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             final ChannelConfig config = ctx.channel().config();

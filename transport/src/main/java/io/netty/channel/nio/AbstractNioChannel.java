@@ -191,6 +191,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
     private void clearReadPending0() {
         readPending = false;
+        // 移除对“读”事件的感兴趣
         ((AbstractNioUnsafe) unsafe()).removeReadOp();
     }
 
@@ -226,6 +227,8 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             if (!key.isValid()) {
                 return;
             }
+
+            // 移除对“读”事件的感兴趣
             int interestOps = key.interestOps();
             if ((interestOps & readInterestOp) != 0) {
                 // only remove readInterestOp if needed

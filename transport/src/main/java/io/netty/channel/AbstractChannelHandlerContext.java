@@ -778,20 +778,25 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     private void write(Object msg, boolean flush, ChannelPromise promise) {
+        // 消息( 数据 )为空，抛出异常
         ObjectUtil.checkNotNull(msg, "msg");
         try {
+            // 判断是否为合法的 Promise 对象
             if (isNotValidPromise(promise, true)) {
+                // 释放消息( 数据 )相关的资源
                 ReferenceCountUtil.release(msg);
                 // cancelled
                 return;
             }
         } catch (RuntimeException e) {
+            // 发生异常，释放消息( 数据 )相关的资源
             ReferenceCountUtil.release(msg);
             throw e;
         }
 
         final AbstractChannelHandlerContext next = findContextOutbound(flush ?
                 (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);
+        // 内存泄漏检测相关
         final Object m = pipeline.touch(msg, next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {

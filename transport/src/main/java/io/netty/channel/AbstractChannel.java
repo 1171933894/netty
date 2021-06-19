@@ -242,6 +242,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         return pipeline.deregister();
     }
 
+    /**
+     * 刷新内存队列，将其中的数据写入到对端
+     * （也就是说，此时数据才真正写到对端）
+     */
     @Override
     public Channel flush() {
         pipeline.flush();
@@ -284,6 +288,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         return this;
     }
 
+    /**
+     * 将数据写到内存队列中（也就是说，此时数据并没有写入到对端）
+     */
     @Override
     public ChannelFuture write(Object msg) {
         return pipeline.write(msg);
@@ -294,6 +301,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         return pipeline.write(msg, promise);
     }
 
+    /**
+     * write + flush 的组合，将数据写到内存队列后，立即刷新内存队列，又将其中的数据写入到对端。
+     * （也就是说，此时数据已经写到对端）
+     */
     @Override
     public ChannelFuture writeAndFlush(Object msg) {
         return pipeline.writeAndFlush(msg);
@@ -877,20 +888,25 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             assertEventLoop();
 
             ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;
+            // 内存队列为空
             if (outboundBuffer == null) {
                 // If the outboundBuffer is null we know the channel was closed and so
                 // need to fail the future right away. If it is not null the handling of the rest
                 // will be done in flush0()
                 // See https://github.com/netty/netty/issues/2362
+                // 内存队列为空，一般是 Channel 已经关闭，所以通知 Promise 异常结果
                 safeSetFailure(promise, newClosedChannelException(initialCloseCause));
                 // release message now to prevent resource-leak
+                // 释放消息( 对象 )相关的资源
                 ReferenceCountUtil.release(msg);
                 return;
             }
 
             int size;
             try {
+                // 过滤写入的消息( 数据 )
                 msg = filterOutboundMessage(msg);
+                // 计算消息的长度
                 size = pipeline.estimatorHandle().size(msg);
                 if (size < 0) {
                     size = 0;
@@ -901,6 +917,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 return;
             }
 
+            // 写入消息( 数据 )到内存队列
             outboundBuffer.addMessage(msg, size, promise);
         }
 

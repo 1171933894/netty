@@ -36,7 +36,7 @@ public interface ChannelInboundHandler extends ChannelHandler {
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} is now active
      */
-    // 当Channel处于活动状态时被调用；Channel已经连接/绑定别且已经就绪
+    // 当Channel处于活动状态时被调用；Channel已经连接/绑定且已经就绪
     void channelActive(ChannelHandlerContext ctx) throws Exception;
 
     /**
