@@ -43,6 +43,15 @@ import java.util.Map;
  * A {@link io.netty.channel.socket.ServerSocketChannel} implementation which uses
  * NIO selector based implementation to accept new connections.
  */
+
+/**
+ * NioServerSocketChannel 接受( accept )客户端连接的过程：
+ *
+ * 1、服务端 NioServerSocketChannel 的 boss EventLoop 线程轮询是否有新的客户端连接接入。
+ * 2、当轮询到有新的连接接入，封装连入的客户端的 SocketChannel 为 Netty NioSocketChannel 对象。
+ * 3、选择一个服务端 NioServerSocketChannel 的 worker EventLoop ，将客户端的 NioSocketChannel 注册到其上。
+ *      并且，注册客户端的 NioSocketChannel 的读事件，开始轮询该客户端是否有数据写入。
+ */
 public class NioServerSocketChannel extends AbstractNioMessageChannel
                              implements io.netty.channel.socket.ServerSocketChannel {
 
@@ -152,7 +161,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     }
 
     /**
-     * 读取操作就是接收客户端的连接，创建NioSocketChannel对象
+     * 读取操作就是接收客户端的连接，创建NioSocketChannel对象（返回值为读取到的数量）
      */
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
@@ -164,12 +173,13 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         try {
             if (ch != null) {
+                // 创建 Netty NioSocketChannel 对象
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }
         } catch (Throwable t) {
             logger.warn("Failed to create a new channel from an accepted socket.", t);
-
+            // 发生异常，关闭客户端的 SocketChannel 连接
             try {
                 ch.close();
             } catch (Throwable t2) {
