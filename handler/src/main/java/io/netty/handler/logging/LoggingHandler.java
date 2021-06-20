@@ -37,7 +37,7 @@ import static io.netty.util.internal.StringUtil.NEWLINE;
  * A {@link ChannelHandler} that logs all events using a logging framework.
  * By default, all events are logged at <tt>DEBUG</tt> level.
  */
-@Sharable
+@Sharable// 支持共享
 @SuppressWarnings({ "StringConcatenationInsideStringBufferAppend", "StringBufferReplaceableByString" })
 public class LoggingHandler extends ChannelDuplexHandler {
 

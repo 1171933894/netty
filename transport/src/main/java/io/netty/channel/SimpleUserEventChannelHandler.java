@@ -39,7 +39,7 @@ import io.netty.util.internal.TypeParameterMatcher;
  * {@link ReferenceCountUtil#release(Object)}. In this case you may need to use
  * {@link ReferenceCountUtil#retain(Object)} if you pass the object to the next handler in the {@link ChannelPipeline}.
  */
-// SimpleUserEventChannelHandler 和 SimpleChannelInboundHandler 基本一致，差别在于将指定类型的消息，改成了制定类型的事件
+// SimpleUserEventChannelHandler 和 SimpleChannelInboundHandler 基本一致，差别在于将指定类型的消息，改成了指定类型的事件
 public abstract class SimpleUserEventChannelHandler<I> extends ChannelInboundHandlerAdapter {
 
     private final TypeParameterMatcher matcher;

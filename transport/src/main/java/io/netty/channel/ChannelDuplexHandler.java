@@ -26,7 +26,7 @@ import java.net.SocketAddress;
  * It is a good starting point if your {@link ChannelHandler} implementation needs to intercept operations and also
  * state updates.
  */
-public class ChannelDuplexHandler extends ChannelInboundHandlerAdapter implements ChannelOutboundHandler {
+public class ChannelDuplexHandler extends ChannelInboundHandlerAdapter implements ChannelOutboundHandler {// duplex：双重
 
     /**
      * Calls {@link ChannelHandlerContext#bind(SocketAddress, ChannelPromise)} to forward
