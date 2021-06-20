@@ -184,6 +184,10 @@ import io.netty.channel.ChannelHandlerContext;
  * </pre>
  * @see LengthFieldPrepender
  */
+
+/**
+ * 基于指定消息边界方式进行粘包拆包处理的
+ */
 public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
 
     private final ByteOrder byteOrder;

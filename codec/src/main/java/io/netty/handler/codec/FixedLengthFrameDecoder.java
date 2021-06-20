@@ -38,8 +38,15 @@ import java.util.List;
  * +-----+-----+-----+
  * </pre>
  */
+
+/**
+ * 固定长度是消息头指定消息长度的一种形式
+ */
 public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
 
+    /**
+     * 固定长度
+     */
     private final int frameLength;
 
     /**
@@ -52,6 +59,9 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
         this.frameLength = frameLength;
     }
 
+    /**
+     * 执行解码
+     */
     @Override
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         // 解码消息

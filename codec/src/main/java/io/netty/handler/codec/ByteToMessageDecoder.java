@@ -77,6 +77,9 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
     /**
      * Cumulate {@link ByteBuf}s by merge them into one {@link ByteBuf}'s, using memory copies.
      */
+    /**
+     * MERGE_CUMULATOR 思路是，不断使用老的 ByteBuf 累积。如果空间不够，扩容出新的 ByteBuf ，再继续进行累积
+     */
     public static final Cumulator MERGE_CUMULATOR = new Cumulator() {
         @Override
         public ByteBuf cumulate(ByteBufAllocator alloc, ByteBuf cumulation, ByteBuf in) {
@@ -105,6 +108,9 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      * Cumulate {@link ByteBuf}s by add them to a {@link CompositeByteBuf} and so do no memory copy whenever possible.
      * Be aware that {@link CompositeByteBuf} use a more complex indexing implementation so depending on your use-case
      * and the decoder implementation this may be slower then just use the {@link #MERGE_CUMULATOR}.
+     */
+    /**
+     * 使用 CompositeByteBuf ，组合新输入的 ByteBuf 对象，从而避免内存拷贝
      */
     public static final Cumulator COMPOSITE_CUMULATOR = new Cumulator() {
         @Override
@@ -321,7 +327,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      */
     static void fireChannelRead(ChannelHandlerContext ctx, CodecOutputList msgs, int numElements) {
         for (int i = 0; i < numElements; i ++) {
-            ctx.fireChannelRead(msgs.getUnsafe(i));
+            ctx.fireChannelRead(msgs.getUnsafe(i));// 注意：这里发送的是ByteBuf对象
         }
     }
 
@@ -562,7 +568,8 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
          * call {@link ByteBuf#release()} if a {@link ByteBuf} is fully consumed.
          */
         /**
-         * 对于 Cumulator#cumulate(ByteBufAllocator alloc, ByteBuf cumulation, ByteBuf in) 方法，将原有 cumulation 累加上新的 in ，返回“新”的 ByteBuf 对象。
+         * 对于 Cumulator#cumulate(ByteBufAllocator alloc, ByteBuf cumulation, ByteBuf in) 方法，
+         * 将原有 cumulation 累加上新的 in ，返回“新”的 ByteBuf 对象。
          * 如果 in 过大，超过 cumulation 的空间上限，使用 alloc 进行扩容后再累加。
          * @param alloc ByteBuf 分配器
          * @param cumulation ByteBuf 当前累积结果

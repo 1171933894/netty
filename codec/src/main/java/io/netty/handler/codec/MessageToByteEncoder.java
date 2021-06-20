@@ -43,6 +43,10 @@ import io.netty.util.internal.TypeParameterMatcher;
  *     }
  * </pre>
  */
+
+/**
+ * 负责将消息编码成字节，支持匹配指定类型的消息
+ */
 public abstract class MessageToByteEncoder<I> extends ChannelOutboundHandlerAdapter {
 
     private final TypeParameterMatcher matcher;
@@ -101,22 +105,32 @@ public abstract class MessageToByteEncoder<I> extends ChannelOutboundHandlerAdap
         try {
             if (acceptOutboundMessage(msg)) {
                 @SuppressWarnings("unchecked")
+                // 对象类型转化为 I 类型的消息
                 I cast = (I) msg;
+                // 申请 buf
                 buf = allocateBuffer(ctx, cast, preferDirect);
                 try {
+                    // 编码
                     encode(ctx, cast, buf);
                 } finally {
+                    // 释放 msg
                     ReferenceCountUtil.release(cast);
                 }
 
+                // buf 可读，说明有编码到数据
                 if (buf.isReadable()) {
+                    // 写入 buf 到下一个节点
                     ctx.write(buf, promise);
                 } else {
+                    // 释放 buf
                     buf.release();
+                    // 写入 EMPTY_BUFFER 到下一个节点，为了 promise 的回调
                     ctx.write(Unpooled.EMPTY_BUFFER, promise);
                 }
+                // 置空 buf
                 buf = null;
             } else {
+                // 提交 write 事件给下一个节点
                 ctx.write(msg, promise);
             }
         } catch (EncoderException e) {
