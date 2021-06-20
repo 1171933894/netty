@@ -349,6 +349,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     @Override
     protected void doClose() throws Exception {
         super.doClose();
+        // 执行 Java 原生 NIO SocketChannel 关闭
         javaChannel().close();
     }
 
